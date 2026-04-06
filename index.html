@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARST AI - Generator Script Otomatis</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        /* Custom scrollbar untuk opsi hook */
+        .hook-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .hook-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .hook-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 text-slate-800 font-sans antialiased p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="max-w-3xl mx-auto w-full pb-20">
+        <!-- Header -->
+        <div class="text-center mb-10 mt-6">
+            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 tracking-tight flex items-center justify-center gap-3">
+                <i class="ph-fill ph-magic-wand text-purple-500"></i> ARST AI
+            </h1>
+            <p class="text-slate-600 font-medium">Bikin Narasi Vidiomu Hanya Dengan Beberapa Klik</p>
+        </div>
+
+        <!-- Notifikasi Error -->
+        <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm" role="alert">
+            <p class="font-bold flex items-center gap-2"><i class="ph-fill ph-warning-circle"></i> Oops!</p>
+            <p id="errorText">Terjadi kesalahan.</p>
+        </div>
+
+        <!-- TAHAP 1: Form Input Container -->
+        <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 pointer-events-none"></div>
+            
+            <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Masukkan Detail Konten
+            </h2>
+
+            <!-- Input Judul -->
+            <div class="mb-6 relative z-10">
+                <label for="title" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                    <i class="ph ph-text-t text-blue-500"></i> Topik / Judul Konten
+                </label>
+                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner" placeholder="Contoh: Cara mengelola keuangan untuk anak kos">
+            </div>
+
+            <!-- Mode Jualan -->
+            <div class="mb-6 relative z-10 bg-orange-50/50 p-4 rounded-2xl border border-orange-100 transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i class="ph ph-shopping-bag text-orange-500"></i> Mode Jualan (Afiliator/Seller)
+                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="productToggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                </div>
+                
+                <div id="productInputContainer" class="hidden mt-4 transition-all">
+                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all shadow-inner" placeholder="Tempel deskripsi atau keunggulan produk di sini..."></textarea>
+                    <p class="text-xs text-orange-600 mt-2 font-medium"><i class="ph ph-info"></i> Narasi akan diarahkan untuk soft-selling produk ini secara natural.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 relative z-10">
+                <!-- Input Tipe Narasi -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i class="ph ph-list-dashes text-blue-500"></i> Tipe Narasi (Bisa pilih lebih dari 1)
+                    </label>
+                    <div class="space-y-3">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Storytelling" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">📖 Storytelling</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="POV" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">👁️ POV</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Edukasi" checked class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🧠 Edukasi</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Hiburan" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🎭 Hiburan</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Input Durasi -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label for="duration" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                        <i class="ph ph-timer text-blue-500"></i> Estimasi Durasi (Detik)
+                    </label>
+                    <input type="number" id="duration" min="15" max="300" value="60" class="w-full px-4 py-3 text-2xl font-bold text-blue-600 text-center rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner">
+                </div>
+            </div>
+
+            <!-- Tombol Generate Hook (Step 1) -->
+            <button id="btnGenerateHook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1">
+                <i class="ph-fill ph-fishing-rod text-xl"></i>
+                <span class="text-lg">1. Buat Opsi Hook 🎣</span>
+                <div id="loadingHook" class="loader hidden"></div>
+            </button>
+        </div>
+
+        <!-- TAHAP 2: Pemilihan Hook -->
+        <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all duration-500 transform translate-y-4 opacity-0">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Pilih Hook Paling Nendang!
+            </h2>
+            <p class="text-sm text-slate-500 mb-4">Pilih satu hook di bawah ini. Narasi akan dibuat menyambung mengalir dari hook yang kamu pilih.</p>
+            
+            <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2">
+                <!-- Hook cards akan disuntikkan ke sini oleh JS -->
+            </div>
+
+            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10">
+                <i class="ph-fill ph-sparkle text-xl"></i>
+                <span class="text-lg">2. Lanjut Buat Narasi & CTA ✨</span>
+                <div id="loadingScript" class="loader hidden"></div>
+            </button>
+        </div>
+
+        <!-- TAHAP 3: Area Hasil Akhir -->
+        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 transition-all duration-500 transform translate-y-4 opacity-0">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="ph-fill ph-check-circle text-green-500"></i> Script Kamu Sudah Jadi!
+                </h2>
+                <button id="copyBtn" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-4 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm border border-indigo-100">
+                    <i class="ph ph-copy"></i> Salin Semua
+                </button>
+            </div>
+            
+            <div class="space-y-5">
+                <!-- Box Hook (Terpilih) -->
+                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-fishing-rod text-blue-600"></i> Hook Terpilih
+                    </h3>
+                    <div id="outHook" class="whitespace-pre-wrap text-slate-800 font-bold text-lg leading-relaxed"></div>
+                </div>
+                
+                <!-- Box Narasi -->
+                <div class="bg-purple-50/80 border border-purple-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-book-open-text text-purple-600"></i> Isi Narasi
+                    </h3>
+                    <div id="outNarasi" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium"></div>
+                </div>
+
+                <!-- Box CTA -->
+                <div class="bg-orange-50/80 border border-orange-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-megaphone text-orange-600"></i> Call to Action (CTA)
+                    </h3>
+                    <div id="outCTA" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-bold"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === KONFIGURASI API ===
+        // API KEY TELAH DIHAPUS DARI SINI UNTUK KEAMANAN.
+        // Permintaan sekarang akan dialihkan ke Serverless Function milik kita sendiri.
+        
+        // === VARIABEL STATE ===
+        let currentInputData = ""; // Menyimpan instruksi dasar dari form
+        let selectedHookText = ""; // Menyimpan hook yang diklik user
+
+        // Fungsi fetch dengan Exponential Backoff
+        async function fetchWithBackoff(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Error API: ${errorData.error?.message || response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        // Fungsi untuk menampilkan error
+        function showError(message) {
+            const errorBox = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.innerText = message;
+            errorBox.classList.remove('hidden');
+            setTimeout(() => { errorBox.classList.add('hidden'); }, 7000);
+        }
+
+        // Toggle Deskripsi Produk
+        document.getElementById('productToggle').addEventListener('change', function() {
+            const container = document.getElementById('productInputContainer');
+            if(this.checked) container.classList.remove('hidden');
+            else container.classList.add('hidden');
+        });
+
+        // ==========================================
+        // TAHAP 1: GENERATE OPSI HOOK
+        // ==========================================
+        document.getElementById('btnGenerateHook').addEventListener('click', async () => {
+            const title = document.getElementById('title').value.trim();
+            const productDesc = document.getElementById('productDesc').value.trim();
+            const duration = document.getElementById('duration').value;
+            const checkboxes = document.querySelectorAll('input[name="type"]:checked');
+            const types = Array.from(checkboxes).map(cb => cb.value).join(', ');
+
+            if (!title) return showError("Topik konten tidak boleh kosong!");
+            if (!types) return showError("Pilih minimal satu tipe narasi!");
+
+            // Siapkan Data Instruksi untuk disimpan di state
+            const isSellingMode = document.getElementById('productToggle').checked;
+            currentInputData = `- Judul/Topik Utama: ${title}\n- Tipe Narasi: ${types}\n- Durasi: ${duration} detik`;
+            if (isSellingMode && productDesc) {
+                currentInputData += `\n- Mode: Jualan/Affiliate\n- Info Produk: ${productDesc}`;
+            } else {
+                currentInputData += `\n- Mode: Murni Konten (Tanpa jualan)`;
+            }
+
+            // Persiapan UI
+            const btn = document.getElementById('btnGenerateHook');
+            const spinner = document.getElementById('loadingHook');
+            const hookArea = document.getElementById('hookSelectionArea');
+            const resultArea = document.getElementById('resultArea');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            hookArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
+            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
+            
+            // Nonaktifkan tombol script di tahap 2
+            const btnScript = document.getElementById('btnGenerateScript');
+            btnScript.disabled = true;
+            btnScript.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10";
+
+            const promptHook = `
+Kamu adalah copywriter TikTok jenius. Buatkan 4 opsi HOOK (kalimat pertama 3-5 detik) yang SANGAT memicu rasa penasaran (curiosity gap) agar penonton tidak scroll, berdasarkan data ini:
+${currentInputData}
+
+Aturan:
+- Gunakan bahasa gaul, luwes, natural (gue/lu atau aku/kamu yang santai).
+- JANGAN bertele-tele. Langsung nendang!
+- Berikan format WAJIB seperti ini untuk tiap opsi (pisahkan dengan tag <H>):
+<H>teks opsi 1</H>
+<H>teks opsi 2</H>
+<H>teks opsi 3</H>
+<H>teks opsi 4</H>
+`;
+
+            try {
+                // MENGUBAH URL API: Sekarang mengarah ke Backend/Serverless Function kita sendiri
+                const url = `/api/generate`; 
+                const data = await fetchWithBackoff(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptHook }) // Hanya mengirim prompt
+                });
+
+                // Penyesuaian cara membaca respons karena bentuk JSON dari backend kita nanti mungkin sedikit berbeda
+                const textResp = data.text; 
+                if (!textResp) throw new Error("Respons AI kosong atau terjadi kesalahan pada server.");
+
+                // Ekstrak tag <H>
+                const hooks = [...textResp.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
+                
+                if (hooks.length === 0) throw new Error("Gagal mengekstrak format Hook. Coba lagi.");
+
+                // Render ke UI
+                const hookList = document.getElementById('hookList');
+                hookList.innerHTML = "";
+                
+                hooks.forEach((hookText, index) => {
+                    const card = document.createElement('div');
+                    card.className = "hook-card cursor-pointer p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-all text-slate-700 font-medium";
+                    
+                    // DESAIN BARU: Menggunakan angka di dalam lingkaran agar lebih rapi dan elegan
+                    card.innerHTML = `<div class="flex gap-4 items-start">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-sm border border-blue-200 shadow-sm mt-0.5">
+                            ${index + 1}
+                        </div>
+                        <p class="leading-relaxed text-slate-700 flex-1">${hookText}</p>
+                    </div>`;
+                    
+                    // Logic saat hook diklik
+                    card.addEventListener('click', () => {
+                        // Reset semua card
+                        document.querySelectorAll('.hook-card').forEach(c => {
+                            c.classList.remove('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
+                            c.classList.add('border-slate-200', 'bg-white');
+                        });
+                        // Highlight card yang dipilih
+                        card.classList.remove('border-slate-200', 'bg-white');
+                        card.classList.add('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
+                        
+                        selectedHookText = hookText;
+                        
+                        // Aktifkan tombol lanjut
+                        btnScript.disabled = false;
+                        btnScript.className = "w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1";
+                    });
+                    
+                    hookList.appendChild(card);
+                });
+
+                // Munculkan area pemilihan hook dengan animasi
+                hookArea.classList.remove('hidden');
+                setTimeout(() => {
+                    hookArea.classList.remove('opacity-0', 'translate-y-4');
+                    hookArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 50);
+
+            } catch (error) {
+                console.error(error);
+                showError("Gagal memuat Hook: " + error.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // ==========================================
+        // TAHAP 2: GENERATE NARASI & CTA
+        // ==========================================
+        document.getElementById('btnGenerateScript').addEventListener('click', async () => {
+            if(!selectedHookText) return;
+
+            // Mengambil durasi dan menghitung target jumlah kata (rata-rata 2 - 2.3 kata per detik)
+            const duration = document.getElementById('duration').value;
+            const targetWordsMin = Math.floor(duration * 2.0);
+            const targetWordsMax = Math.floor(duration * 2.3);
+
+            const btn = document.getElementById('btnGenerateScript');
+            const spinner = document.getElementById('loadingScript');
+            const resultArea = document.getElementById('resultArea');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
+
+            const promptScript = `
+Lanjutkan pembuatan script video TikTok/Reels berdasarkan panduan berikut.
+
+DATA KONTEN:
+${currentInputData}
+
+HOOK YANG SUDAH DIPILIH:
+"${selectedHookText}"
+
+TUGAS:
+Lanjutkan Hook di atas menjadi sebuah ISI NARASI yang mengalir utuh, lalu diakhiri dengan CTA (Call to Action).
+
+ATURAN FLOW & GAYA BAHASA (SANGAT PENTING):
+1. Transisi Seamless: Kalimat pertama di ISI NARASI harus langsung menyambung dengan logika/pertanyaan dari Hook. Jangan mengulang Hook, tapi jawab/lanjutkan rasa penasarannya.
+2. Super Flowy & Luwes: Gunakan bahasa obrolan sehari-hari layaknya ngobrol sama teman akrab (santai, tidak kaku, flow-nya enak dibaca). 
+3. AKURASI DURASI (PENTING!): Kamu WAJIB menulis isi narasi dengan panjang tulisan antara ${targetWordsMin} sampai ${targetWordsMax} kata. Ini wajib ditaati agar saat dibacakan (voice over) durasinya bisa tepat ${duration} detik.
+4. CTA Natural: Di akhir, ajak interaksi atau suruh cek keranjang kuning (jika mode jualan) dengan cara yang halus, bukan maksa.
+
+Gunakan format WAJIB XML berikut:
+<NARASI>
+[Isi narasi flowy dengan jumlah kata sesuai aturan durasi di sini]
+</NARASI>
+
+<CTA>
+[Teks CTA di sini]
+</CTA>
+`;
+
+            try {
+                // MENGUBAH URL API: Sekarang mengarah ke Backend/Serverless Function kita sendiri
+                const url = `/api/generate`; 
+                const data = await fetchWithBackoff(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptScript }) // Hanya mengirim prompt
+                });
+
+                const scriptText = data.text;
+                if (!scriptText) throw new Error("Gagal memuat kelanjutan script.");
+
+                const extractText = (tag) => {
+                    const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
+                    const match = scriptText.match(regex);
+                    return match ? match[1].trim() : ``;
+                };
+
+                // Tampilkan Hasil
+                document.getElementById('outHook').innerText = selectedHookText;
+                document.getElementById('outNarasi').innerText = extractText('NARASI');
+                document.getElementById('outCTA').innerText = extractText('CTA');
+
+                // Tampilkan area hasil dengan animasi
+                resultArea.classList.remove('hidden');
+                setTimeout(() => {
+                    resultArea.classList.remove('opacity-0', 'translate-y-4');
+                    resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+
+            } catch (error) {
+                console.error(error);
+                showError("Gagal meracik narasi: " + error.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // ==========================================
+        // FITUR COPY CLIPBOARD
+        // ==========================================
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const hookText = document.getElementById('outHook').innerText;
+            const narasiText = document.getElementById('outNarasi').innerText;
+            const ctaText = document.getElementById('outCTA').innerText;
+            
+            const content = `**HOOK:**\n${hookText}\n\n**NARASI:**\n${narasiText}\n\n**CTA:**\n${ctaText}`;
+            if(!hookText) return;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                const copyBtn = document.getElementById('copyBtn');
+                const originalHTML = copyBtn.innerHTML;
+                
+                copyBtn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Tersalin!';
+                copyBtn.classList.replace('bg-indigo-50', 'bg-green-100');
+                copyBtn.classList.replace('text-indigo-700', 'text-green-700');
+                copyBtn.classList.replace('border-indigo-100', 'border-green-200');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.replace('bg-green-100', 'bg-indigo-50');
+                    copyBtn.classList.replace('text-green-700', 'text-indigo-700');
+                    copyBtn.classList.replace('border-green-200', 'border-indigo-100');
+                }, 2500);
+            } catch (err) {
+                showError("Gagal menyalin teks.");
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        });
+    </script>
+</body>
+</html>
