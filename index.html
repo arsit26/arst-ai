@@ -31,14 +31,12 @@
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 text-slate-800 font-sans antialiased p-4 md:p-8 min-h-screen flex flex-col items-center relative">
 
-    <!-- Tombol Pengaturan (Pojok Kanan Atas) -->
     <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50">
         <button id="settingsBtn" class="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-blue-600 hover:shadow-lg transition-all" title="Pengaturan API Key">
             <i class="ph-fill ph-gear text-2xl"></i>
         </button>
     </div>
 
-    <!-- Modal Pop-up Pengaturan -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative transform transition-all">
             <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
@@ -154,7 +152,7 @@
             <p class="text-sm text-slate-500 mb-4">Pilih satu hook di bawah ini. Narasi akan dibuat menyambung mengalir dari hook yang kamu pilih.</p>
             
             <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2">
-                </div>
+            </div>
 
             <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10">
                 <i class="ph-fill ph-sparkle text-xl"></i>
@@ -199,7 +197,6 @@
     </div>
 
     <script>
-        // API Key akan otomatis diisi oleh eksekutor web saat di-preview di sini
         const apiKey = ""; 
 
         // === VARIABEL STATE ===
@@ -213,7 +210,6 @@
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const apiKeyInput = document.getElementById('userApiKey');
 
-        // Muat API Key dari Local Storage saat web dibuka
         window.addEventListener('DOMContentLoaded', () => {
             try {
                 const savedKey = localStorage.getItem('arst_api_key');
@@ -221,21 +217,18 @@
                     apiKeyInput.value = savedKey;
                 }
             } catch (e) {
-                console.warn("Local storage diblokir di mode preview.");
+                console.warn("Local storage diblokir.");
             }
         });
 
-        // Buka Pengaturan
         settingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('hidden');
         });
 
-        // Tutup Pengaturan
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
         });
 
-        // Simpan Pengaturan
         saveSettingsBtn.addEventListener('click', () => {
             const key = apiKeyInput.value.trim();
             try {
@@ -245,12 +238,11 @@
                     localStorage.removeItem('arst_api_key');
                 }
             } catch (e) {
-                console.warn("Local storage diblokir di mode preview.");
+                console.warn("Local storage diblokir.");
             }
             settingsModal.classList.add('hidden');
         });
 
-        // Fungsi fetch dengan Exponential Backoff
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
             for (let i = 0; i < retries; i++) {
@@ -261,9 +253,7 @@
                         try {
                             const errorData = await response.json();
                             errorMessage = errorData.error?.message || errorMessage;
-                        } catch(e) {
-                            // Abaikan jika bukan format JSON
-                        }
+                        } catch(e) {}
                         throw new Error(errorMessage);
                     }
                     return await response.json();
@@ -274,7 +264,6 @@
             }
         }
 
-        // Fungsi Error
         function showError(message) {
             const errorBox = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
@@ -283,20 +272,14 @@
             setTimeout(() => { errorBox.classList.add('hidden'); }, 7000);
         }
 
-        // Toggle Deskripsi Produk
         document.getElementById('productToggle').addEventListener('change', function() {
             const container = document.getElementById('productInputContainer');
             if(this.checked) container.classList.remove('hidden');
             else container.classList.add('hidden');
         });
 
-        // ==========================================
-        // TAHAP 1: GENERATE OPSI HOOK
-        // ==========================================
         document.getElementById('btnGenerateHook').addEventListener('click', async () => {
             const userApiKey = document.getElementById('userApiKey').value.trim();
-            
-            // PRIORITAS: Gunakan apiKey dari sistem Preview (jika ada), jika tidak gunakan input dari user
             const activeApiKey = apiKey || userApiKey;
 
             const title = document.getElementById('title').value.trim();
@@ -347,7 +330,8 @@ Aturan:
 <H>teks opsi 4</H>`;
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
+                // MODEL SUDAH DIPERBARUI KE gemini-1.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeApiKey}`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -394,7 +378,7 @@ Aturan:
 
             } catch (error) {
                 console.error(error);
-                showError("Error: " + error.message + " (Pastikan API Key Anda benar dan kuota tersedia)");
+                showError("Error: " + error.message);
             } finally {
                 btn.disabled = false;
                 spinner.classList.add('hidden');
@@ -443,7 +427,8 @@ Gunakan format WAJIB XML berikut:
 </CTA>`;
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
+                // MODEL SUDAH DIPERBARUI KE gemini-1.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeApiKey}`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
