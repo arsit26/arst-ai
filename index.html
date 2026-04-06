@@ -330,8 +330,8 @@ Aturan:
 <H>teks opsi 4</H>`;
 
             try {
-                // MODEL SUDAH DIPERBARUI KE gemini-1.5-flash
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeApiKey}`;
+                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -427,8 +427,8 @@ Gunakan format WAJIB XML berikut:
 </CTA>`;
 
             try {
-                // MODEL SUDAH DIPERBARUI KE gemini-1.5-flash
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeApiKey}`;
+                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
