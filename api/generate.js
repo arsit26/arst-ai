@@ -1,34 +1,31 @@
-export default async function handler(req, res) {
-  // Hanya menerima metode POST
+module.exports = async function(req, res) {
+  // --- FITUR CEK SERVER (Agar kita tahu Vercel-nya sudah baca file ini) ---
+  if (req.method === 'GET') {
+    return res.status(200).send("API SERVER ARST AI BERJALAN NORMAL! 🚀");
+  }
+
+  // --- LOGIKA UTAMA APLIKASI ---
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Hanya menerima metode POST' });
   }
 
   try {
-    // Mengambil prompt yang dikirim dari tampilan depan (HTML)
     const { prompt } = req.body;
-    
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
-    }
+    if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
-    // Mengambil API Key yang disembunyikan dengan aman di brankas Vercel
+    // Mengambil API Key dari Vercel
     const apiKey = process.env.GEMINI_API_KEY;
-
     if (!apiKey) {
-        return res.status(500).json({ error: 'API Key belum diatur di server Vercel.' });
+        return res.status(500).json({ error: 'API Key belum diatur di Vercel.' });
     }
 
-    // Alamat asli AI Google Gemini
     const googleApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-    // Data yang dikirim ke Gemini
     const payload = {
         contents: [{ parts: [{ text: prompt }] }],
         systemInstruction: { parts: [{ text: "Gunakan bahasa Indonesia yang gaul, engaging, dan mudah dipahami oleh pengguna sosial media masa kini." }] }
     };
 
-    // Proses mengirim permintaan
     const response = await fetch(googleApiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -38,10 +35,9 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-        return res.status(response.status).json({ error: data.error?.message || 'Error dari API Google' });
+        return res.status(response.status).json({ error: data.error?.message || 'Error API Google' });
     }
 
-    // Mengambil teks balasan dari AI dan mengirimkannya kembali ke aplikasimu
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     return res.status(200).json({ text: generatedText });
 
@@ -49,4 +45,4 @@ export default async function handler(req, res) {
     console.error('Server error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
