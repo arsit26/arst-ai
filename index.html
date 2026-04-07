@@ -105,7 +105,7 @@
                 </div>
                 
                 <div id="productInputContainer" class="hidden mt-4 transition-all">
-                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all shadow-inner text-sm" placeholder="Contoh: Masukkan info produk di sini (misal: Speaker Bluetooth bass mantap, batre 12 jam, harga cuma 100rb)"></textarea>
+                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all shadow-inner text-sm" placeholder="Sebutkan Nama Brand & Keunggulan Produk (Contoh: Botol Minum ARST, tahan panas 24 jam, bahan BPA Free)"></textarea>
                 </div>
             </div>
 
@@ -327,7 +327,7 @@
             // Update Global State
             currentInputData = `TOPIK: ${title}\nTIPE: ${types}\nDURASI TARGET: ${durValue} detik`;
             if (isSelling && product) {
-                currentInputData += `\nMODE: Jualan/Affiliate\nDESKRIPSI PRODUK: ${product}`;
+                currentInputData += `\nMODE: Jualan/Affiliate\nDATA PRODUK (Nama Brand & Detail): ${product}`;
             } else {
                 currentInputData += `\nMODE: Konten Edukasi/Hiburan Murni`;
             }
@@ -339,17 +339,16 @@
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
                 
-                const promptHook = `Kamu adalah copywriter TikTok jenius yang ahli dalam membuat HOOK (kalimat 3-5 detik pertama) yang "scroll-stopping" dan memicu rasa penasaran tinggi (curiosity gap).
+                const promptHook = `Kamu adalah copywriter TikTok jenius. Buat 4 opsi HOOK (kalimat 3-5 detik pertama) yang sangat nendang dan memicu rasa penasaran.
                 
                 DATA KONTEN:
                 ${currentInputData}
                 
-                INSTRUKSI:
-                1. Buat 4 opsi HOOK yang sangat nendang dan tidak bertele-tele.
-                2. Harus relevan dengan topik dan produk (jika dalam mode Jualan).
-                3. Gunakan gaya bahasa Indonesia yang gaul, luwes, dan natural (seperti bicara langsung ke teman).
-                4. Hindari kata-kata membosankan atau terlalu formal.
-                5. Format WAJIB: Gunakan tag <H> untuk membungkus tiap opsi (Contoh: <H>Hook 1</H> <H>Hook 2</H>).`;
+                INSTRUKSI KHUSUS:
+                1. DILARANG menggunakan tanda kurung siku seperti [Nama Brand].
+                2. GUNAKAN LANGSUNG nama brand atau detail produk yang ada di bagian DATA PRODUK di atas ke dalam kalimat.
+                3. Gaya bahasa gaul, luwes, natural.
+                4. Format WAJIB: Gunakan tag <H> untuk membungkus tiap opsi.`;
 
                 const res = await fetchWithBackoff(url, {
                     method: 'POST',
@@ -380,18 +379,14 @@
             } catch(e) { showError(e.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
-        // STEP 2: SCRIPT (DENGAN PERBAIKAN DESKRIPSI & CTA)
+        // STEP 2: SCRIPT (DENGAN PERBAIKAN PENGGUNAAN DATA BRAND)
         document.getElementById('btnGenerateScript').onclick = async () => {
             const activeKey = apiKey || apiKeyInput.value.trim();
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
             const duration = parseInt(document.getElementById('duration').value);
 
-            // LOGIKA PERHITUNGAN JUMLAH KATA
             const totalWordsTarget = Math.floor(duration * 2.2); 
-            const hookWords = selectedHookText.split(' ').length;
-            const remainingWords = totalWordsTarget - hookWords;
-
             btn.disabled = true; loader.classList.remove('hidden');
 
             try {
@@ -403,13 +398,14 @@
                 
                 HOOK TERPILIH: "${selectedHookText}"
                 
-                INSTRUKSI KETAT:
-                1. INTEGRASI PRODUK: Jika dalam mode Jualan/Affiliate, masukkan DESKRIPSI PRODUK ke dalam narasi secara SOFT-SELLING (natural, bukan iklan kaku). Hubungkan produk tersebut sebagai solusi dari masalah yang dibahas.
-                2. DURASI: Total kata (Hook + Narasi + CTA) harus sekitar ${totalWordsTarget} kata agar durasi pas.
-                3. GAYA BAHASA: Gaul, luwes, tidak kaku, dan to-the-point.
-                4. CTA (Call to Action): Harus SINGKAT, PADAT, dan MENGGERAKKAN (Contoh: "Cek keranjang kuning sekarang!", "Klik link di bio ya!"). MAKSIMAL 12 KATA. Jangan bertele-tele di bagian CTA.
+                INSTRUKSI KETAT (WAJIB DITAATI):
+                1. DILARANG KERAS menggunakan placeholder bertanda kurung siku seperti "[masukkan nama brand]", "[link]", "[harga]", atau "[keunggulan]".
+                2. AMBIL LANGSUNG detail nama brand dan info dari DESKRIPSI PRODUK yang diinput user di atas. Jika user menulis "Botol ARST", maka sebut "Botol ARST" di dalam narasi secara natural.
+                3. INTEGRASI PRODUK: Masukkan keunggulan produk secara soft-selling sebagai solusi.
+                4. DURASI: Total kata seluruh script harus sekitar ${totalWordsTarget} kata.
+                5. CTA: Singkat dan padat (Maksimal 12 kata).
                 
-                Format WAJIB XML: <NARASI>isi narasi saja di sini</NARASI><CTA>isi cta singkat di sini</CTA>.`;
+                Format WAJIB XML: <NARASI>isi narasi</NARASI><CTA>isi cta</CTA>.`;
 
                 const res = await fetchWithBackoff(url, {
                     method: 'POST',
@@ -444,7 +440,7 @@
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeKey}`;
                 const payload = {
-                    contents: [{ parts: [{ text: `Karakter: ${character}, Tone: ${tone}. Bacakan teks berikut: ${text}` }] }],
+                    contents: [{ parts: [{ text: `Tone: ${tone}. Bacakan teks berikut dengan sangat natural: ${text}` }] }],
                     generationConfig: {
                         responseModalities: ["AUDIO"],
                         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
@@ -455,7 +451,7 @@
                 const result = await response.json();
                 const pcmBase64 = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
                 
-                if (!pcmBase64) throw new Error("Gagal generate audio. Pastikan teks tidak terlalu panjang.");
+                if (!pcmBase64) throw new Error("Gagal generate audio. Coba lagi.");
 
                 const bin = atob(pcmBase64);
                 const pcm = new Int16Array(bin.length / 2);
