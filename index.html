@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARST AI - Generator Script Otomatis</title>
+    <title>ARST AI - Generator Script & Voice Otomatis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -31,12 +31,14 @@
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 text-slate-800 font-sans antialiased p-4 md:p-8 min-h-screen flex flex-col items-center relative">
 
+    <!-- Tombol Pengaturan -->
     <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50">
         <button id="settingsBtn" class="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-blue-600 hover:shadow-lg transition-all" title="Pengaturan API Key">
             <i class="ph-fill ph-gear text-2xl"></i>
         </button>
     </div>
 
+    <!-- Modal Pop-up Pengaturan -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative transform transition-all">
             <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
@@ -149,10 +151,7 @@
             <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
                 <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Pilih Hook Paling Nendang!
             </h2>
-            <p class="text-sm text-slate-500 mb-4">Pilih satu hook di bawah ini. Narasi akan dibuat menyambung mengalir dari hook yang kamu pilih.</p>
-            
-            <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2">
-            </div>
+            <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2"></div>
 
             <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10">
                 <i class="ph-fill ph-sparkle text-xl"></i>
@@ -164,11 +163,13 @@
         <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 transition-all duration-500 transform translate-y-4 opacity-0">
             <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i class="ph-fill ph-check-circle text-green-500"></i> Script Kamu Sudah Jadi!
+                    <i class="ph-fill ph-check-circle text-green-500"></i> Script Jadi!
                 </h2>
-                <button id="copyBtn" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-4 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm border border-indigo-100">
-                    <i class="ph ph-copy"></i> Salin Semua
-                </button>
+                <div class="flex gap-2">
+                    <button id="copyBtn" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-3 rounded-xl font-bold transition-colors flex items-center gap-2 border border-indigo-100 shadow-sm">
+                        <i class="ph ph-copy"></i> Salin
+                    </button>
+                </div>
             </div>
             
             <div class="space-y-5">
@@ -180,15 +181,24 @@
                 </div>
                 
                 <div class="bg-purple-50/80 border border-purple-200 rounded-2xl p-5 relative">
-                    <h3 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
-                        <i class="ph-fill ph-book-open-text text-purple-600"></i> Isi Narasi
-                    </h3>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-purple-800 flex items-center gap-2">
+                            <i class="ph-fill ph-book-open-text text-purple-600"></i> Isi Narasi
+                        </h3>
+                        <button id="btnGenerateVoice" class="bg-purple-600 hover:bg-purple-700 text-white text-xs py-1.5 px-3 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all">
+                            <i class="ph-fill ph-speaker-high"></i> Dengarkan Suara
+                            <div id="voiceLoader" class="hidden w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </button>
+                    </div>
                     <div id="outNarasi" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium"></div>
+                    <div id="audioContainer" class="mt-4 hidden">
+                        <audio id="audioPlayer" controls class="w-full h-10 rounded-lg"></audio>
+                    </div>
                 </div>
 
                 <div class="bg-orange-50/80 border border-orange-200 rounded-2xl p-5 relative">
                     <h3 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
-                        <i class="ph-fill ph-megaphone text-orange-600"></i> Call to Action (CTA)
+                        <i class="ph-fill ph-megaphone text-orange-600"></i> CTA
                     </h3>
                     <div id="outCTA" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-bold"></div>
                 </div>
@@ -197,13 +207,12 @@
     </div>
 
     <script>
+        // API Key sistem preview (biarkan kosong untuk BYOK)
         const apiKey = ""; 
 
-        // === VARIABEL STATE ===
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
-        // === PENGATURAN MODAL & LOCAL STORAGE ===
         const settingsModal = document.getElementById('settingsModal');
         const settingsBtn = document.getElementById('settingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -213,33 +222,18 @@
         window.addEventListener('DOMContentLoaded', () => {
             try {
                 const savedKey = localStorage.getItem('arst_api_key');
-                if (savedKey) {
-                    apiKeyInput.value = savedKey;
-                }
-            } catch (e) {
-                console.warn("Local storage diblokir.");
-            }
+                if (savedKey) apiKeyInput.value = savedKey;
+            } catch (e) { console.warn("Local storage diblokir."); }
         });
 
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.classList.remove('hidden');
-        });
-
-        closeSettingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('hidden');
-        });
-
+        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
         saveSettingsBtn.addEventListener('click', () => {
             const key = apiKeyInput.value.trim();
             try {
-                if (key) {
-                    localStorage.setItem('arst_api_key', key);
-                } else {
-                    localStorage.removeItem('arst_api_key');
-                }
-            } catch (e) {
-                console.warn("Local storage diblokir.");
-            }
+                if (key) localStorage.setItem('arst_api_key', key);
+                else localStorage.removeItem('arst_api_key');
+            } catch (e) { console.warn("Local storage diblokir."); }
             settingsModal.classList.add('hidden');
         });
 
@@ -249,257 +243,168 @@
                 try {
                     const response = await fetch(url, options);
                     if (!response.ok) {
-                        let errorMessage = `Gagal terhubung ke server Google API (${response.status})`;
-                        try {
-                            const errorData = await response.json();
-                            errorMessage = errorData.error?.message || errorMessage;
-                        } catch(e) {}
+                        let errorMessage = `API Error (${response.status})`;
+                        try { const errorData = await response.json(); errorMessage = errorData.error?.message || errorMessage; } catch(e) {}
                         throw new Error(errorMessage);
                     }
                     return await response.json();
                 } catch (error) {
                     if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                    await new Promise(res => setTimeout(res, delays[i]));
                 }
             }
         }
 
         function showError(message) {
             const errorBox = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            errorText.innerText = message;
+            document.getElementById('errorText').innerText = message;
             errorBox.classList.remove('hidden');
-            setTimeout(() => { errorBox.classList.add('hidden'); }, 7000);
+            setTimeout(() => errorBox.classList.add('hidden'), 7000);
         }
 
         document.getElementById('productToggle').addEventListener('change', function() {
-            const container = document.getElementById('productInputContainer');
-            if(this.checked) container.classList.remove('hidden');
-            else container.classList.add('hidden');
+            document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         });
 
+        // STEP 1: HOOK GENERATION
         document.getElementById('btnGenerateHook').addEventListener('click', async () => {
-            const userApiKey = document.getElementById('userApiKey').value.trim();
-            const activeApiKey = apiKey || userApiKey;
-
+            const activeApiKey = apiKey || apiKeyInput.value.trim();
             const title = document.getElementById('title').value.trim();
-            const productDesc = document.getElementById('productDesc').value.trim();
-            const duration = document.getElementById('duration').value;
-            const checkboxes = document.querySelectorAll('input[name="type"]:checked');
-            const types = Array.from(checkboxes).map(cb => cb.value).join(', ');
+            const types = Array.from(document.querySelectorAll('input[name="type"]:checked')).map(cb => cb.value).join(', ');
 
-            if (!activeApiKey) {
-                settingsModal.classList.remove('hidden');
-                document.getElementById('userApiKey').focus();
-                return showError("Anda wajib mengatur API Key Gemini di Pengaturan terlebih dahulu!");
-            }
-            if (!title) return showError("Topik konten tidak boleh kosong!");
-            if (!types) return showError("Pilih minimal satu tipe narasi!");
+            if (!activeApiKey) { settingsModal.classList.remove('hidden'); return showError("Atur API Key di Pengaturan!"); }
+            if (!title || !types) return showError("Isi topik dan pilih tipe narasi!");
 
-            const isSellingMode = document.getElementById('productToggle').checked;
-            currentInputData = `- Judul/Topik Utama: ${title}\n- Tipe Narasi: ${types}\n- Durasi: ${duration} detik`;
-            if (isSellingMode && productDesc) {
-                currentInputData += `\n- Mode: Jualan/Affiliate\n- Info Produk: ${productDesc}`;
-            } else {
-                currentInputData += `\n- Mode: Murni Konten (Tanpa jualan)`;
-            }
+            currentInputData = `Topik: ${title}, Tipe: ${types}, Durasi: ${document.getElementById('duration').value}s`;
+            if (document.getElementById('productToggle').checked) currentInputData += `, Produk: ${document.getElementById('productDesc').value}`;
 
             const btn = document.getElementById('btnGenerateHook');
-            const spinner = document.getElementById('loadingHook');
-            const hookArea = document.getElementById('hookSelectionArea');
-            const resultArea = document.getElementById('resultArea');
-            
-            btn.disabled = true;
-            spinner.classList.remove('hidden');
-            hookArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
-            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
-            
-            const btnScript = document.getElementById('btnGenerateScript');
-            btnScript.disabled = true;
-            btnScript.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10";
-
-            const promptHook = `Kamu adalah copywriter TikTok jenius. Buatkan 4 opsi HOOK (kalimat pertama 3-5 detik) yang SANGAT memicu rasa penasaran (curiosity gap) agar penonton tidak scroll, berdasarkan data ini:
-${currentInputData}
-Aturan:
-- Gunakan bahasa gaul, luwes, natural (gue/lu atau aku/kamu yang santai).
-- JANGAN bertele-tele. Langsung nendang!
-- Berikan format WAJIB seperti ini untuk tiap opsi (pisahkan dengan tag <H>):
-<H>teks opsi 1</H>
-<H>teks opsi 2</H>
-<H>teks opsi 3</H>
-<H>teks opsi 4</H>`;
+            const loader = document.getElementById('loadingHook');
+            btn.disabled = true; loader.classList.remove('hidden');
 
             try {
-                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptHook }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Buat 4 opsi HOOK sosial media untuk data ini: ${currentInputData}. Format: <H>teks</H> per opsi.` }] }] })
                 });
 
-                const textResp = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!textResp) throw new Error("Respons AI kosong. Pastikan API Key valid.");
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
+                const list = document.getElementById('hookList');
+                list.innerHTML = "";
 
-                const hooks = [...textResp.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
-                if (hooks.length === 0) throw new Error("Gagal memformat. Silakan coba tekan tombol generate lagi.");
-
-                const hookList = document.getElementById('hookList');
-                hookList.innerHTML = "";
-                
-                hooks.forEach((hookText, index) => {
-                    const card = document.createElement('div');
-                    card.className = "hook-card cursor-pointer p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-all text-slate-700 font-medium";
-                    card.innerHTML = `<div class="flex gap-4 items-start">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-sm border border-blue-200 shadow-sm mt-0.5">${index + 1}</div>
-                        <p class="leading-relaxed text-slate-700 flex-1">${hookText}</p>
-                    </div>`;
-                    
-                    card.addEventListener('click', () => {
-                        document.querySelectorAll('.hook-card').forEach(c => {
-                            c.classList.remove('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
-                            c.classList.add('border-slate-200', 'bg-white');
-                        });
-                        card.classList.remove('border-slate-200', 'bg-white');
-                        card.classList.add('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
-                        
-                        selectedHookText = hookText;
-                        btnScript.disabled = false;
-                        btnScript.className = "w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1";
-                    });
-                    hookList.appendChild(card);
+                hooks.forEach((h) => {
+                    const el = document.createElement('div');
+                    el.className = "p-4 rounded-xl border-2 border-slate-200 cursor-pointer hover:bg-blue-50 font-medium";
+                    el.innerText = h;
+                    el.onclick = () => {
+                        document.querySelectorAll('#hookList div').forEach(c => c.classList.remove('border-blue-500', 'bg-blue-50'));
+                        el.classList.add('border-blue-500', 'bg-blue-50');
+                        selectedHookText = h;
+                        document.getElementById('btnGenerateScript').disabled = false;
+                        document.getElementById('btnGenerateScript').className = "w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg flex justify-center items-center gap-3";
+                    };
+                    list.appendChild(el);
                 });
 
-                hookArea.classList.remove('hidden');
-                setTimeout(() => {
-                    hookArea.classList.remove('opacity-0', 'translate-y-4');
-                    hookArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 50);
-
-            } catch (error) {
-                console.error(error);
-                showError("Error: " + error.message);
-            } finally {
-                btn.disabled = false;
-                spinner.classList.add('hidden');
-            }
+                document.getElementById('hookSelectionArea').classList.remove('hidden');
+                setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
+            } catch (err) { showError(err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
         });
 
-        // ==========================================
-        // TAHAP 2: GENERATE NARASI & CTA
-        // ==========================================
+        // STEP 2: SCRIPT GENERATION
         document.getElementById('btnGenerateScript').addEventListener('click', async () => {
-            if(!selectedHookText) return;
-
-            const userApiKey = document.getElementById('userApiKey').value.trim();
-            const activeApiKey = apiKey || userApiKey;
-
-            const duration = document.getElementById('duration').value;
-            const targetWordsMin = Math.floor(duration * 2.0);
-            const targetWordsMax = Math.floor(duration * 2.3);
-
+            const activeApiKey = apiKey || apiKeyInput.value.trim();
             const btn = document.getElementById('btnGenerateScript');
-            const spinner = document.getElementById('loadingScript');
-            const resultArea = document.getElementById('resultArea');
-            
-            btn.disabled = true;
-            spinner.classList.remove('hidden');
-            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
-
-            const promptScript = `Lanjutkan pembuatan script video TikTok/Reels berdasarkan panduan berikut.
-DATA KONTEN:
-${currentInputData}
-HOOK YANG SUDAH DIPILIH:
-"${selectedHookText}"
-TUGAS:
-Lanjutkan Hook di atas menjadi sebuah ISI NARASI yang mengalir utuh, lalu diakhiri dengan CTA (Call to Action).
-ATURAN FLOW & GAYA BAHASA:
-1. Transisi Seamless: Langsung nyambung dari Hook. Jangan mengulang Hook.
-2. Super Flowy & Luwes: Bahasa obrolan santai.
-3. AKURASI DURASI: Tulis narasi antara ${targetWordsMin} sampai ${targetWordsMax} kata. Wajib ditaati.
-4. CTA Natural: Arahkan tindakan halus.
-Gunakan format WAJIB XML berikut:
-<NARASI>
-[Isi narasi flowy di sini]
-</NARASI>
-<CTA>
-[Teks CTA di sini]
-</CTA>`;
+            const loader = document.getElementById('loadingScript');
+            btn.disabled = true; loader.classList.remove('hidden');
 
             try {
-                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
+                const prompt = `Lanjutkan hook "${selectedHookText}" jadi narasi video utuh. Format XML: <NARASI>teks</NARASI><CTA>teks</CTA>.`;
                 const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptScript }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
 
-                const scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!scriptText) throw new Error("Gagal memuat script.");
-
-                const extractText = (tag) => {
-                    const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
-                    const match = scriptText.match(regex);
-                    return match ? match[1].trim() : ``;
-                };
+                const text = data.candidates[0].content.parts[0].text;
+                const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
 
                 document.getElementById('outHook').innerText = selectedHookText;
-                document.getElementById('outNarasi').innerText = extractText('NARASI');
-                document.getElementById('outCTA').innerText = extractText('CTA');
-
-                resultArea.classList.remove('hidden');
-                setTimeout(() => {
-                    resultArea.classList.remove('opacity-0', 'translate-y-4');
-                    resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 50);
-
-            } catch (error) {
-                showError("Gagal meracik narasi: " + error.message);
-            } finally {
-                btn.disabled = false;
-                spinner.classList.add('hidden');
-            }
+                document.getElementById('outNarasi').innerText = extract('NARASI');
+                document.getElementById('outCTA').innerText = extract('CTA');
+                document.getElementById('resultArea').classList.remove('hidden');
+                document.getElementById('audioContainer').classList.add('hidden');
+                setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
+            } catch (err) { showError(err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
         });
 
-        // ==========================================
-        // FITUR COPY CLIPBOARD
-        // ==========================================
-        document.getElementById('copyBtn').addEventListener('click', () => {
-            const hookText = document.getElementById('outHook').innerText;
+        // STEP 3: VOICE GENERATION (NEW)
+        document.getElementById('btnGenerateVoice').addEventListener('click', async () => {
+            const activeApiKey = apiKey || apiKeyInput.value.trim();
             const narasiText = document.getElementById('outNarasi').innerText;
-            const ctaText = document.getElementById('outCTA').innerText;
-            
-            const content = `**HOOK:**\n${hookText}\n\n**NARASI:**\n${narasiText}\n\n**CTA:**\n${ctaText}`;
-            if(!hookText) return;
+            if (!narasiText) return;
 
-            const textarea = document.createElement('textarea');
-            textarea.value = content;
-            document.body.appendChild(textarea);
-            textarea.select();
-            
+            const btn = document.getElementById('btnGenerateVoice');
+            const loader = document.getElementById('voiceLoader');
+            btn.disabled = true; loader.classList.remove('hidden');
+
             try {
-                document.execCommand('copy');
-                const copyBtn = document.getElementById('copyBtn');
-                const originalHTML = copyBtn.innerHTML;
+                // Model TTS khusus
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeApiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: `Bacakan narasi ini dengan suara natural Indonesia: ${narasiText}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                    }
+                };
+
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
                 
-                copyBtn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Tersalin!';
-                copyBtn.classList.replace('bg-indigo-50', 'bg-green-100');
-                copyBtn.classList.replace('text-indigo-700', 'text-green-700');
-                copyBtn.classList.replace('border-indigo-100', 'border-green-200');
+                const pcmBase64 = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                if (!pcmBase64) throw new Error("Gagal generate audio.");
+
+                // Konversi PCM ke WAV agar bisa diputar
+                const binaryString = atob(pcmBase64);
+                const pcmData = new Int16Array(binaryString.length / 2);
+                for (let i = 0; i < pcmData.length; i++) {
+                    pcmData[i] = binaryString.charCodeAt(i * 2) | (binaryString.charCodeAt(i * 2 + 1) << 8);
+                }
+
+                const wavBlob = pcmToWav(pcmData, 24000); // 24kHz default Gemini
+                const audioUrl = URL.createObjectURL(wavBlob);
                 
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalHTML;
-                    copyBtn.classList.replace('bg-green-100', 'bg-indigo-50');
-                    copyBtn.classList.replace('text-green-700', 'text-indigo-700');
-                    copyBtn.classList.replace('border-green-200', 'border-indigo-100');
-                }, 2500);
-            } catch (err) {
-                showError("Gagal menyalin teks.");
-            } finally {
-                document.body.removeChild(textarea);
-            }
+                const player = document.getElementById('audioPlayer');
+                player.src = audioUrl;
+                document.getElementById('audioContainer').classList.remove('hidden');
+                player.play();
+            } catch (err) { showError("TTS Error: " + err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
         });
+
+        // Utility: PCM16 to WAV
+        function pcmToWav(pcmData, sampleRate) {
+            const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+            const view = new DataView(buffer);
+            const writeString = (offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
+            writeString(0, 'RIFF'); view.setUint32(4, 36 + pcmData.length * 2, true); writeString(8, 'WAVE');
+            writeString(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true); writeString(36, 'data'); view.setUint32(40, pcmData.length * 2, true);
+            for (let i = 0; i < pcmData.length; i++) view.setInt16(44 + i * 2, pcmData[i], true);
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        // Copy Clipboard
+        document.getElementById('copyBtn').onclick = () => {
+            const txt = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
+            const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+            showError("Berhasil disalin!");
+        };
     </script>
 </body>
 </html>
