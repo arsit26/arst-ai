@@ -76,6 +76,7 @@
             <p id="errorText">Terjadi kesalahan.</p>
         </div>
 
+        <!-- TAHAP 1: INPUT DATA -->
         <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 pointer-events-none"></div>
             
@@ -103,139 +104,182 @@
                 
                 <div id="productInputContainer" class="hidden mt-4 transition-all">
                     <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all shadow-inner" placeholder="Tempel deskripsi atau keunggulan produk di sini..."></textarea>
-                    <p class="text-xs text-orange-600 mt-2 font-medium"><i class="ph ph-info"></i> Narasi akan diarahkan untuk soft-selling produk ini secara natural.</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 relative z-10">
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <i class="ph ph-list-dashes text-blue-500"></i> Tipe Narasi (Bisa pilih > 1)
+                        <i class="ph ph-list-dashes text-blue-500"></i> Tipe Narasi
                     </label>
                     <div class="space-y-3">
                         <label class="flex items-center space-x-3 cursor-pointer group">
-                            <input type="checkbox" name="type" value="Storytelling" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">📖 Storytelling</span>
+                            <input type="checkbox" name="type" value="Storytelling" class="w-5 h-5 text-blue-600 rounded border-slate-300">
+                            <span class="text-slate-700 font-medium">📖 Storytelling</span>
                         </label>
                         <label class="flex items-center space-x-3 cursor-pointer group">
-                            <input type="checkbox" name="type" value="POV" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">👁️ POV</span>
+                            <input type="checkbox" name="type" value="POV" class="w-5 h-5 text-blue-600 rounded border-slate-300">
+                            <span class="text-slate-700 font-medium">👁️ POV</span>
                         </label>
                         <label class="flex items-center space-x-3 cursor-pointer group">
-                            <input type="checkbox" name="type" value="Edukasi" checked class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🧠 Edukasi</span>
-                        </label>
-                        <label class="flex items-center space-x-3 cursor-pointer group">
-                            <input type="checkbox" name="type" value="Hiburan" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🎭 Hiburan</span>
+                            <input type="checkbox" name="type" value="Edukasi" checked class="w-5 h-5 text-blue-600 rounded border-slate-300">
+                            <span class="text-slate-700 font-medium">🧠 Edukasi</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <label for="duration" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                        <i class="ph ph-timer text-blue-500"></i> Estimasi Durasi (Detik)
+                        <i class="ph ph-timer text-blue-500"></i> Durasi (Detik)
                     </label>
-                    <input type="number" id="duration" min="15" max="300" value="60" class="w-full px-4 py-3 text-2xl font-bold text-blue-600 text-center rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner">
+                    <input type="number" id="duration" value="60" class="w-full px-4 py-3 text-2xl font-bold text-blue-600 text-center rounded-xl border border-slate-200 outline-none">
                 </div>
             </div>
 
-            <button id="btnGenerateHook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1">
+            <button id="btnGenerateHook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex justify-center items-center gap-3">
                 <i class="ph-fill ph-fishing-rod text-xl"></i>
                 <span class="text-lg">1. Buat Opsi Hook 🎣</span>
                 <div id="loadingHook" class="loader hidden"></div>
             </button>
         </div>
 
+        <!-- TAHAP 2: PILIH HOOK -->
         <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all duration-500 transform translate-y-4 opacity-0">
             <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
-                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Pilih Hook Paling Nendang!
+                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Pilih Hook
             </h2>
-            <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2"></div>
-
-            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10">
+            <div id="hookList" class="space-y-3 mb-6"></div>
+            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl flex justify-center items-center gap-3 transition-all">
                 <i class="ph-fill ph-sparkle text-xl"></i>
-                <span class="text-lg">2. Lanjut Buat Narasi & CTA ✨</span>
+                <span>2. Lanjut Buat Narasi ✨</span>
                 <div id="loadingScript" class="loader hidden"></div>
             </button>
         </div>
 
-        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 transition-all duration-500 transform translate-y-4 opacity-0">
+        <!-- TAHAP 3: HASIL SCRIPT -->
+        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all duration-500 transform translate-y-4 opacity-0">
             <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i class="ph-fill ph-check-circle text-green-500"></i> Script Jadi!
-                </h2>
-                <div class="flex gap-2">
-                    <button id="copyBtn" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-3 rounded-xl font-bold transition-colors flex items-center gap-2 border border-indigo-100 shadow-sm">
-                        <i class="ph ph-copy"></i> Salin
-                    </button>
-                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Script Jadi!</h2>
+                <button id="copyBtn" class="text-sm bg-indigo-50 text-indigo-700 py-2 px-4 rounded-xl font-bold border border-indigo-100 flex items-center gap-2">
+                    <i class="ph ph-copy"></i> Salin Semua
+                </button>
             </div>
             
-            <div class="space-y-5">
-                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-5 relative">
-                    <h3 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                        <i class="ph-fill ph-fishing-rod text-blue-600"></i> Hook Terpilih
-                    </h3>
-                    <div id="outHook" class="whitespace-pre-wrap text-slate-800 font-bold text-lg leading-relaxed"></div>
+            <div class="space-y-4">
+                <div class="bg-blue-50/80 p-4 rounded-2xl border border-blue-100 group relative">
+                    <button onclick="copyToTTS('outHook')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white text-[10px] py-1 px-2 rounded-lg font-bold">Kirim ke TTS ↓</button>
+                    <h3 class="font-bold text-blue-800 text-xs uppercase tracking-wider mb-1">Hook</h3>
+                    <div id="outHook" class="text-slate-800 font-bold leading-relaxed"></div>
                 </div>
-                
-                <div class="bg-purple-50/80 border border-purple-200 rounded-2xl p-5 relative">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-purple-800 flex items-center gap-2">
-                            <i class="ph-fill ph-book-open-text text-purple-600"></i> Isi Narasi
-                        </h3>
-                        <button id="btnGenerateVoice" class="bg-purple-600 hover:bg-purple-700 text-white text-xs py-1.5 px-3 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all">
-                            <i class="ph-fill ph-speaker-high"></i> Dengarkan Suara
-                            <div id="voiceLoader" class="hidden w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        </button>
+                <div class="bg-purple-50/80 p-4 rounded-2xl border border-purple-100 group relative">
+                    <button onclick="copyToTTS('outNarasi')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-purple-600 text-white text-[10px] py-1 px-2 rounded-lg font-bold">Kirim ke TTS ↓</button>
+                    <h3 class="font-bold text-purple-800 text-xs uppercase tracking-wider mb-1">Narasi</h3>
+                    <div id="outNarasi" class="text-slate-700 leading-relaxed"></div>
+                </div>
+                <div class="bg-orange-50/80 p-4 rounded-2xl border border-orange-100 group relative">
+                    <button onclick="copyToTTS('outCTA')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-orange-600 text-white text-[10px] py-1 px-2 rounded-lg font-bold">Kirim ke TTS ↓</button>
+                    <h3 class="font-bold text-orange-800 text-xs uppercase tracking-wider mb-1">CTA</h3>
+                    <div id="outCTA" class="text-slate-700 font-bold"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAHAP 4: AI VOICE GENERATOR (NEW SECTION) -->
+        <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 relative overflow-hidden transition-all duration-500 transform">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-200 pb-3">
+                <i class="ph-fill ph-speaker-hifi text-blue-600"></i> AI Voice Generator
+                <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full uppercase">Premium Fitur</span>
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Input Teks TTS -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Teks yang akan diubah jadi suara:</label>
+                    <textarea id="ttsInput" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none transition-all shadow-inner text-sm leading-relaxed" placeholder="Tulis atau kirim teks dari hasil script di atas..."></textarea>
+                </div>
+
+                <!-- Pilihan Karakter & Tone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Pilih Pengisi Suara:</label>
+                        <select id="voiceCharacter" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none text-sm font-medium">
+                            <optgroup label="👩 Wanita (Female)">
+                                <option value="Kore">Kore - Ceria & Energik</option>
+                                <option value="Leda">Leda - Lembut & Tenang</option>
+                                <option value="Aoede">Aoede - Profesional & Elegan</option>
+                            </optgroup>
+                            <optgroup label="👨 Pria (Male)">
+                                <option value="Fenrir">Fenrir - Dalam & Berwibawa</option>
+                                <option value="Puck">Puck - Ramah & Santai</option>
+                                <option value="Charon">Charon - Tegas & Serius</option>
+                            </optgroup>
+                        </select>
                     </div>
-                    <div id="outNarasi" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium"></div>
-                    <div id="audioContainer" class="mt-4 hidden">
-                        <audio id="audioPlayer" controls class="w-full h-10 rounded-lg"></audio>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Tipe Tone / Ekspresi:</label>
+                        <select id="voiceTone" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none text-sm font-medium">
+                            <option value="semangat">Bersemangat (Excited)</option>
+                            <option value="profesional">Profesional (Professional)</option>
+                            <option value="santai">Santai (Casual)</option>
+                            <option value="serius">Serius (Serious)</option>
+                            <option value="bisikan">Bisikan (Whisper)</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="bg-orange-50/80 border border-orange-200 rounded-2xl p-5 relative">
-                    <h3 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
-                        <i class="ph-fill ph-megaphone text-orange-600"></i> CTA
-                    </h3>
-                    <div id="outCTA" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-bold"></div>
+                <!-- Button Generate Audio -->
+                <button id="btnGenerateTTS" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3">
+                    <i class="ph-fill ph-play-circle text-xl"></i>
+                    <span>Ubah Jadi Suara (Generate Voice)</span>
+                    <div id="loadingTTS" class="loader hidden"></div>
+                </button>
+
+                <!-- Audio Player -->
+                <div id="ttsAudioArea" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl animate-pulse-slow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                            <i class="ph-fill ph-waves"></i> Audio Ready
+                        </span>
+                        <a id="downloadAudio" href="#" download="arst-ai-voice.wav" class="text-blue-600 hover:text-blue-800 text-xs font-bold underline">Download MP3</a>
+                    </div>
+                    <audio id="ttsAudioPlayer" controls class="w-full h-10"></audio>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // API Key sistem preview (biarkan kosong untuk BYOK)
         const apiKey = ""; 
-
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
+        // Settings Modal Logic
         const settingsModal = document.getElementById('settingsModal');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const apiKeyInput = document.getElementById('userApiKey');
 
         window.addEventListener('DOMContentLoaded', () => {
             try {
                 const savedKey = localStorage.getItem('arst_api_key');
                 if (savedKey) apiKeyInput.value = savedKey;
-            } catch (e) { console.warn("Local storage diblokir."); }
+            } catch (e) { console.warn("Local storage blocked."); }
         });
 
-        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-        saveSettingsBtn.addEventListener('click', () => {
-            const key = apiKeyInput.value.trim();
-            try {
-                if (key) localStorage.setItem('arst_api_key', key);
-                else localStorage.removeItem('arst_api_key');
-            } catch (e) { console.warn("Local storage diblokir."); }
+        document.getElementById('settingsBtn').onclick = () => settingsModal.classList.remove('hidden');
+        document.getElementById('closeSettingsBtn').onclick = () => settingsModal.classList.add('hidden');
+        document.getElementById('saveSettingsBtn').onclick = () => {
+            localStorage.setItem('arst_api_key', apiKeyInput.value.trim());
             settingsModal.classList.add('hidden');
-        });
+        };
+
+        // Utility: Copy to TTS TextArea
+        window.copyToTTS = (elementId) => {
+            const text = document.getElementById(elementId).innerText;
+            const currentVal = document.getElementById('ttsInput').value;
+            document.getElementById('ttsInput').value = (currentVal ? currentVal + "\n\n" : "") + text;
+            document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('ttsInput').classList.add('ring-2', 'ring-blue-500');
+            setTimeout(() => document.getElementById('ttsInput').classList.remove('ring-2', 'ring-blue-500'), 1000);
+        };
 
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
@@ -243,9 +287,9 @@
                 try {
                     const response = await fetch(url, options);
                     if (!response.ok) {
-                        let errorMessage = `API Error (${response.status})`;
-                        try { const errorData = await response.json(); errorMessage = errorData.error?.message || errorMessage; } catch(e) {}
-                        throw new Error(errorMessage);
+                        let msg = `API Error (${response.status})`;
+                        try { const d = await response.json(); msg = d.error?.message || msg; } catch(e){}
+                        throw new Error(msg);
                     }
                     return await response.json();
                 } catch (error) {
@@ -256,154 +300,147 @@
         }
 
         function showError(message) {
-            const errorBox = document.getElementById('errorMessage');
             document.getElementById('errorText').innerText = message;
-            errorBox.classList.remove('hidden');
-            setTimeout(() => errorBox.classList.add('hidden'), 7000);
+            document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => document.getElementById('errorMessage').classList.add('hidden'), 5000);
         }
 
-        document.getElementById('productToggle').addEventListener('change', function() {
+        document.getElementById('productToggle').onchange = function() {
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
-        });
+        };
 
-        // STEP 1: HOOK GENERATION
-        document.getElementById('btnGenerateHook').addEventListener('click', async () => {
-            const activeApiKey = apiKey || apiKeyInput.value.trim();
+        // STEP 1: HOOKS
+        document.getElementById('btnGenerateHook').onclick = async () => {
+            const activeKey = apiKey || apiKeyInput.value.trim();
             const title = document.getElementById('title').value.trim();
-            const types = Array.from(document.querySelectorAll('input[name="type"]:checked')).map(cb => cb.value).join(', ');
-
-            if (!activeApiKey) { settingsModal.classList.remove('hidden'); return showError("Atur API Key di Pengaturan!"); }
-            if (!title || !types) return showError("Isi topik dan pilih tipe narasi!");
-
-            currentInputData = `Topik: ${title}, Tipe: ${types}, Durasi: ${document.getElementById('duration').value}s`;
-            if (document.getElementById('productToggle').checked) currentInputData += `, Produk: ${document.getElementById('productDesc').value}`;
+            if (!activeKey) { settingsModal.classList.remove('hidden'); return; }
+            if (!title) return showError("Isi topik konten!");
 
             const btn = document.getElementById('btnGenerateHook');
             const loader = document.getElementById('loadingHook');
             btn.disabled = true; loader.classList.remove('hidden');
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
-                const data = await fetchWithBackoff(url, {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+                const res = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Buat 4 opsi HOOK sosial media untuk data ini: ${currentInputData}. Format: <H>teks</H> per opsi.` }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Buat 4 opsi HOOK viral TikTok untuk topik: ${title}. Format: <H>teks</H>` }] }] })
                 });
-
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const text = res.candidates[0].content.parts[0].text;
                 const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
+                
                 const list = document.getElementById('hookList');
                 list.innerHTML = "";
-
-                hooks.forEach((h) => {
-                    const el = document.createElement('div');
-                    el.className = "p-4 rounded-xl border-2 border-slate-200 cursor-pointer hover:bg-blue-50 font-medium";
-                    el.innerText = h;
-                    el.onclick = () => {
-                        document.querySelectorAll('#hookList div').forEach(c => c.classList.remove('border-blue-500', 'bg-blue-50'));
-                        el.classList.add('border-blue-500', 'bg-blue-50');
+                hooks.forEach(h => {
+                    const d = document.createElement('div');
+                    d.className = "p-4 rounded-xl border-2 border-slate-200 cursor-pointer hover:bg-blue-50 transition-all font-medium";
+                    d.innerText = h;
+                    d.onclick = () => {
+                        document.querySelectorAll('#hookList div').forEach(x => x.classList.remove('border-blue-500', 'bg-blue-50'));
+                        d.classList.add('border-blue-500', 'bg-blue-50');
                         selectedHookText = h;
                         document.getElementById('btnGenerateScript').disabled = false;
-                        document.getElementById('btnGenerateScript').className = "w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg flex justify-center items-center gap-3";
+                        document.getElementById('btnGenerateScript').classList.replace('bg-slate-300', 'bg-blue-600');
+                        document.getElementById('btnGenerateScript').classList.replace('text-slate-500', 'text-white');
                     };
-                    list.appendChild(el);
+                    list.appendChild(d);
                 });
-
                 document.getElementById('hookSelectionArea').classList.remove('hidden');
                 setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch (err) { showError(err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
-        });
+            } catch(e) { showError(e.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
+        };
 
-        // STEP 2: SCRIPT GENERATION
-        document.getElementById('btnGenerateScript').addEventListener('click', async () => {
-            const activeApiKey = apiKey || apiKeyInput.value.trim();
+        // STEP 2: SCRIPT
+        document.getElementById('btnGenerateScript').onclick = async () => {
+            const activeKey = apiKey || apiKeyInput.value.trim();
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
             btn.disabled = true; loader.classList.remove('hidden');
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
-                const prompt = `Lanjutkan hook "${selectedHookText}" jadi narasi video utuh. Format XML: <NARASI>teks</NARASI><CTA>teks</CTA>.`;
-                const data = await fetchWithBackoff(url, {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+                const prompt = `Lanjutkan hook "${selectedHookText}" jadi narasi video utuh. Format XML: <NARASI>teks</NARASI><CTA>teks</CTA>. Gunakan bahasa gaul Indonesia.`;
+                const res = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
-
-                const text = data.candidates[0].content.parts[0].text;
+                const text = res.candidates[0].content.parts[0].text;
                 const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
 
                 document.getElementById('outHook').innerText = selectedHookText;
                 document.getElementById('outNarasi').innerText = extract('NARASI');
                 document.getElementById('outCTA').innerText = extract('CTA');
                 document.getElementById('resultArea').classList.remove('hidden');
-                document.getElementById('audioContainer').classList.add('hidden');
                 setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch (err) { showError(err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
-        });
+            } catch(e) { showError(e.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
+        };
 
-        // STEP 3: VOICE GENERATION (NEW)
-        document.getElementById('btnGenerateVoice').addEventListener('click', async () => {
-            const activeApiKey = apiKey || apiKeyInput.value.trim();
-            const narasiText = document.getElementById('outNarasi').innerText;
-            if (!narasiText) return;
+        // STEP 3: VOICE GENERATOR
+        document.getElementById('btnGenerateTTS').onclick = async () => {
+            const activeKey = apiKey || apiKeyInput.value.trim();
+            const text = document.getElementById('ttsInput').value.trim();
+            const character = document.getElementById('voiceCharacter').value;
+            const tone = document.getElementById('voiceTone').value;
 
-            const btn = document.getElementById('btnGenerateVoice');
-            const loader = document.getElementById('voiceLoader');
+            if (!activeKey) { settingsModal.classList.remove('hidden'); return; }
+            if (!text) return showError("Masukkan teks yang ingin diubah jadi suara!");
+
+            const btn = document.getElementById('btnGenerateTTS');
+            const loader = document.getElementById('loadingTTS');
             btn.disabled = true; loader.classList.remove('hidden');
 
             try {
-                // Model TTS khusus
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeApiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeKey}`;
                 const payload = {
-                    contents: [{ parts: [{ text: `Bacakan narasi ini dengan suara natural Indonesia: ${narasiText}` }] }],
+                    contents: [{ parts: [{ text: `Say in a ${tone} tone: ${text}` }] }],
                     generationConfig: {
                         responseModalities: ["AUDIO"],
-                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
                     }
                 };
 
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const result = await response.json();
-                
                 const pcmBase64 = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                if (!pcmBase64) throw new Error("Gagal generate audio.");
+                
+                if (!pcmBase64) throw new Error("Gagal generate audio. Coba lagi.");
 
-                // Konversi PCM ke WAV agar bisa diputar
-                const binaryString = atob(pcmBase64);
-                const pcmData = new Int16Array(binaryString.length / 2);
-                for (let i = 0; i < pcmData.length; i++) {
-                    pcmData[i] = binaryString.charCodeAt(i * 2) | (binaryString.charCodeAt(i * 2 + 1) << 8);
-                }
+                // Convert PCM to WAV
+                const bin = atob(pcmBase64);
+                const pcm = new Int16Array(bin.length / 2);
+                for (let i = 0; i < pcm.length; i++) pcm[i] = bin.charCodeAt(i*2) | (bin.charCodeAt(i*2+1) << 8);
 
-                const wavBlob = pcmToWav(pcmData, 24000); // 24kHz default Gemini
+                const wavBlob = pcmToWav(pcm, 24000);
                 const audioUrl = URL.createObjectURL(wavBlob);
                 
-                const player = document.getElementById('audioPlayer');
+                const player = document.getElementById('ttsAudioPlayer');
+                const downloadLink = document.getElementById('downloadAudio');
                 player.src = audioUrl;
-                document.getElementById('audioContainer').classList.remove('hidden');
+                downloadLink.href = audioUrl;
+                
+                document.getElementById('ttsAudioArea').classList.remove('hidden');
                 player.play();
-            } catch (err) { showError("TTS Error: " + err.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
-        });
+            } catch(e) { showError(e.message); } finally { btn.disabled = false; loader.classList.add('hidden'); }
+        };
 
-        // Utility: PCM16 to WAV
-        function pcmToWav(pcmData, sampleRate) {
-            const buffer = new ArrayBuffer(44 + pcmData.length * 2);
-            const view = new DataView(buffer);
-            const writeString = (offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
-            writeString(0, 'RIFF'); view.setUint32(4, 36 + pcmData.length * 2, true); writeString(8, 'WAVE');
-            writeString(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
-            view.setUint16(34, 16, true); writeString(36, 'data'); view.setUint32(40, pcmData.length * 2, true);
-            for (let i = 0; i < pcmData.length; i++) view.setInt16(44 + i * 2, pcmData[i], true);
-            return new Blob([view], { type: 'audio/wav' });
+        function pcmToWav(pcm, rate) {
+            const b = new ArrayBuffer(44 + pcm.length * 2);
+            const v = new DataView(b);
+            const s = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+            s(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); s(8, 'WAVE');
+            s(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+            v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true);
+            v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+            for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, pcm[i], true);
+            return new Blob([v], { type: 'audio/wav' });
         }
 
-        // Copy Clipboard
         document.getElementById('copyBtn').onclick = () => {
-            const txt = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
-            const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
-            showError("Berhasil disalin!");
+            const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
+            const area = document.createElement('textarea'); area.value = t; document.body.appendChild(area); area.select(); document.execCommand('copy'); document.body.removeChild(area);
+            showError("Tersalin ke clipboard!");
         };
     </script>
 </body>
