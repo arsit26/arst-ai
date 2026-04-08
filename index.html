@@ -40,10 +40,18 @@
                 <i class="ph ph-x text-2xl"></i>
             </button>
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-3 text-slate-800">
-                <i class="ph-fill ph-key text-blue-600"></i> API Key Gemini
+                <i class="ph-fill ph-gear text-blue-600"></i> Pengaturan
             </h2>
-            <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="AIzaSyBxxxx...">
-            <p class="text-[10px] text-slate-500 mt-2 italic">Pastikan memakai API Key terbaru dari Google AI Studio.</p>
+            <div class="mb-6">
+                <label for="userApiKey" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                    <i class="ph-fill ph-key text-blue-600"></i> API Key Gemini
+                </label>
+                <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="AIzaSyBxxxx...">
+                <p class="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+                    Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition-colors">Dapatkan gratis di sini</a>.<br>
+                    <span class="text-green-600 font-bold"><i class="ph-fill ph-lock-key"></i> Aman. Disimpan hanya di memori browser Anda sendiri.</span>
+                </p>
+            </div>
             <button id="saveSettingsBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">Simpan & Tutup</button>
         </div>
     </div>
@@ -56,8 +64,9 @@
             <p class="text-slate-600 font-medium italic">Cerita jujur, narasi spontan, hasil manusiawi.</p>
         </div>
 
-        <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md">
-            <p id="errorText" class="text-sm font-bold"></p>
+        <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm">
+            <p class="font-bold flex items-center gap-2 mb-1"><i class="ph-fill ph-warning-circle"></i> Oops! Ada Masalah:</p>
+            <p id="errorText" class="text-sm font-medium"></p>
         </div>
 
         <!-- INPUT SECTION -->
@@ -90,7 +99,7 @@
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <label class="block text-sm font-bold text-slate-700 mb-3">Tipe Vibe</label>
                     <div class="space-y-2">
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="Storytelling" checked> <span class="text-sm">📖 Storytelling</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="Storytelling" checked> <span class="text-sm">📖 Storytelling Natural</span></label>
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="POV" checked> <span class="text-sm">👁️ POV Jujur</span></label>
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="Edukasi" checked> <span class="text-sm">🧠 Edukasi</span></label>
                     </div>
@@ -206,17 +215,24 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        async function fetchAI(prompt, model = "gemini-1.5-flash") {
+        async function fetchAI(prompt, model = "gemini-2.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
-            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset!"); }
+            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
-            if (!response.ok) throw new Error("Terjadi kesalahan pada server AI.");
-            return await response.json();
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Menangkap pesan error asli dari Google API agar lebih mudah dilacak
+                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
+            }
+            return data;
         }
 
         document.getElementById('productToggle').onchange = function() {
@@ -336,7 +352,10 @@
                         }
                     })
                 });
+                
                 const data = await res.json();
+                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
+                
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
                 const pcm = new Int16Array(bin.length / 2);
@@ -348,7 +367,7 @@
                 document.getElementById('downloadAudio').href = audioUrl;
                 document.getElementById('ttsAudioArea').classList.remove('hidden');
                 document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { showError("Error Suara"); }
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
@@ -367,6 +386,7 @@
         function showError(msg) {
             document.getElementById('errorText').innerText = msg;
             document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('errorMessage').classList.add('hidden'); }, 7000);
         }
 
         document.getElementById('copyBtn').onclick = () => {
