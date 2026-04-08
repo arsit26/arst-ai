@@ -223,7 +223,7 @@
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         };
 
-        // STEP 1: HOOKS
+        // STEP 1: HOOKS (SANGAT PENDEK & NENDANG)
         document.getElementById('btnGenerateHook').onclick = async () => {
             const title = document.getElementById('title').value.trim();
             if (!title) return;
@@ -238,9 +238,12 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Kamu adalah scriptwriter TikTok natural. Buat 4 opsi HOOK spontan (3-5 detik) untuk topik: ${title}.
-            Gunakan teknik: Curiosity Gap atau Pattern Interrupt. 
-            ATURAN: Jangan pake tanda kurung siku [ ]. Bahasa gaul/santai. 
+            const prompt = `Buat 4 opsi HOOK TikTok untuk topik: ${title}.
+            ATURAN KETAT (ANTI LEBAY):
+            1. SUPER SINGKAT. Maksimal 1-2 kalimat pendek (3 detik baca).
+            2. LANGSUNG NENDANG. Jangan ada sapaan "Halo guys", "Pernah gak sih", atau opening basa-basi.
+            3. DILARANG ALAY. Jangan pakai kata "bestie", "jujurly", "gila sih". Pakai bahasa normal yang datar tapi bikin penasaran.
+            4. Jangan pake tanda kurung siku [ ].
             Format: <H>teks</H> per opsi.`;
 
             try {
@@ -270,7 +273,7 @@
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
-        // STEP 2: SCRIPT
+        // STEP 2: SCRIPT (ANTI-LEBAY & CUEK)
         document.getElementById('btnGenerateScript').onclick = async () => {
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
@@ -280,13 +283,17 @@
             btn.disabled = true; loader.classList.remove('hidden');
 
             const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi utuh berdurasi ${duration} detik (~${wordCount} kata).
-            IKUTI ATURAN STORYTELLING NATURAL: 
-            1. Pikiran/Skeptis Awal.
-            2. Momen Mencoba (detail random & nyata).
-            3. Reaksi Jujur & Refleksi Personal.
-            Pake kata filler: "jujur", "aneh sih", "ternyata".
-            DILARANG pake tanda kurung siku [] atau kata "sangat bagus". Gunakan langsung data: ${currentInputData}.
-            CTA: Singkat & halus (maks 12 kata).
+            DATA: ${currentInputData}.
+            ATURAN NARASI (ANTI-LEBAY): 
+            1. NADA DATAR & REALISTIS: Ceritanya mengalir biasa saja. Jangan mendramatisir, jangan over-excited. Gaya bicaranya seperti curhat cuek ke teman, bukan gaya sales.
+            2. DILARANG KATA ALAY: Jangan pakai kata "bestie", "jujurly", "sumpah", "gila sih".
+            3. HINDARI KATA KAKU: Jangan pakai "sangat bagus", "solusi terbaik", "luar biasa".
+            4. Jika ada produk, sebutkan fiturnya tanpa memuji berlebihan. Jangan pakai kurung siku [].
+            
+            ATURAN CTA (ANTI-HARD SELLING):
+            1. Super singkat (Maksimal 8 kata).
+            2. Nada cuek seakan-akan tidak peduli orang mau beli atau tidak. (Contoh: "Link ada di bio kalo mau", "Cek keranjang aja ya", "Terserah sih mau cek bio atau nggak").
+            
             Format XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
 
             try {
