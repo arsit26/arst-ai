@@ -215,6 +215,7 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
+        // KESALAHAN TELAH DIPERBAIKI DI SINI: Model default menjadi gemini-2.5-flash
         async function fetchAI(prompt, model = "gemini-2.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
@@ -229,7 +230,7 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Menangkap pesan error asli dari Google API agar lebih mudah dilacak
+                // Menangkap pesan error asli dari Google API (bukan pesan generic lagi)
                 throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
             }
             return data;
