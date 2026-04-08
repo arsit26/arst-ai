@@ -61,7 +61,7 @@
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 tracking-tight flex items-center justify-center gap-3">
                 <i class="ph-fill ph-magic-wand text-purple-500"></i> ARST AI
             </h1>
-            <p class="text-slate-600 font-medium italic">Bikin Narasi Kontenmu Hanya Dengan Beberapa Klik.</p>
+            <p class="text-slate-600 font-medium italic">BIKIN NARASI KONTENMU HANYA DENGAN BEBERAPA KLIK.</p>
         </div>
 
         <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm">
@@ -215,7 +215,6 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // KESALAHAN TELAH DIPERBAIKI DI SINI: Model default menjadi gemini-2.5-flash
         async function fetchAI(prompt, model = "gemini-2.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
@@ -230,7 +229,6 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Menangkap pesan error asli dari Google API (bukan pesan generic lagi)
                 throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
             }
             return data;
@@ -240,7 +238,7 @@
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         };
 
-        // STEP 1: HOOKS (SANGAT PENDEK & NENDANG)
+        // STEP 1: HOOKS 
         document.getElementById('btnGenerateHook').onclick = async () => {
             const title = document.getElementById('title').value.trim();
             if (!title) return;
@@ -255,13 +253,17 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Buat 4 opsi HOOK TikTok untuk topik: ${title}.
-            ATURAN KETAT (ANTI LEBAY):
-            1. SUPER SINGKAT. Maksimal 1-2 kalimat pendek (3 detik baca).
-            2. LANGSUNG NENDANG. Jangan ada sapaan "Halo guys", "Pernah gak sih", atau opening basa-basi.
-            3. DILARANG ALAY. Jangan pakai kata "bestie", "jujurly", "gila sih". Pakai bahasa normal yang datar tapi bikin penasaran.
-            4. Jangan pake tanda kurung siku [ ].
-            Format: <H>teks</H> per opsi.`;
+            // --- PROMPT BARU UNTUK HOOK ---
+            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video (maksimal 3-5 detik diucapkan) untuk topik: ${title}.
+            
+            ATURAN PENULISAN HOOK:
+            1. TANPA BASA-BASI: Jangan pakai intro panjang atau sapaan ("Halo guys"). Langsung jawab: "Kenapa penonton harus peduli dengan video ini?"
+            2. VERBAL HOOK KUAT: Gunakan pernyataan kontroversial, pertanyaan retoris tajam, atau janji hasil akhir.
+            3. FOKUS RETENSI: Buat kalimat yang menghentikan jempol audiens saat mereka sedang scrolling.
+            4. MENULIS UNTUK TELINGA: Gunakan kalimat pendek yang enak diucapkan (tidak membelit lidah). Gunakan kata ganti "kamu" atau "kita".
+            5. DILARANG menggunakan tanda kurung siku [ ].
+            
+            Format WAJIB: <H>teks</H> per opsi.`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -290,7 +292,7 @@
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
-        // STEP 2: SCRIPT (ANTI-LEBAY & CUEK)
+        // STEP 2: SCRIPT
         document.getElementById('btnGenerateScript').onclick = async () => {
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
@@ -299,19 +301,24 @@
 
             btn.disabled = true; loader.classList.remove('hidden');
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi utuh berdurasi ${duration} detik (~${wordCount} kata).
-            DATA: ${currentInputData}.
-            ATURAN NARASI (ANTI-LEBAY): 
-            1. NADA DATAR & REALISTIS: Ceritanya mengalir biasa saja. Jangan mendramatisir, jangan over-excited. Gaya bicaranya seperti curhat cuek ke teman, bukan gaya sales.
-            2. DILARANG KATA ALAY: Jangan pakai kata "bestie", "jujurly", "sumpah", "gila sih".
-            3. HINDARI KATA KAKU: Jangan pakai "sangat bagus", "solusi terbaik", "luar biasa".
-            4. Jika ada produk, sebutkan fiturnya tanpa memuji berlebihan. Jangan pakai kurung siku [].
+            // --- PROMPT BARU UNTUK NARASI & CTA ---
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik (~${wordCount} kata).
+            DATA KONTEN: ${currentInputData}.
             
-            ATURAN CTA (ANTI-HARD SELLING):
-            1. Super singkat (Maksimal 8 kata).
-            2. Nada cuek seakan-akan tidak peduli orang mau beli atau tidak. (Contoh: "Link ada di bio kalo mau", "Cek keranjang aja ya", "Terserah sih mau cek bio atau nggak").
+            ATURAN NARASI (PETA EMOSI & RETENSI):
+            1. TEKNIK OPEN LOOPS: Sampaikan informasi tapi simpan "kuncinya" untuk nanti agar penonton terus menonton karena penasaran.
+            2. PACING DINAMIS: Selang-seling antara informasi padat, hiburan ringan, dan momen refleksi agar penonton tidak kelelahan informasi (brain fog).
+            3. EMOSI > INFORMASI: Gunakan pendekatan Storytelling (Ada masalah/antagonis, ada solusi/pahlawan, ada transformasi). Buat agar penonton "merasakan" kontennya.
+            4. RELATABILITAS: Gunakan bahasa yang manusiawi, bukan bahasa robot/kamus. Gunakan kata "kamu" dan "kita".
+            5. MENULIS UNTUK TELINGA: Gunakan kalimat-kalimat pendek. Jika dibaca keras, tidak boleh ada kata yang membelit lidah atau bikin kehabisan napas.
+            6. DILARANG menggunakan tanda kurung siku [] untuk data. Langsung integrasikan data secara organik.
             
-            Format XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
+            ATURAN SMART CTA:
+            1. DILARANG menggunakan CTA pasaran seperti "Jangan lupa like dan subscribe" atau "Beli sekarang".
+            2. Buat CTA yang menggerakkan audiens secara natural (Contoh: "Kalau kamu merasa tips nomor 3 ini berguna, coba share ke temanmu yang sering ngalamin hal serupa").
+            3. Sisipkan keyword utama secara organik agar terdeteksi SEO TikTok/YouTube.
+            
+            Format WAJIB XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
 
             try {
                 const res = await fetchAI(prompt);
