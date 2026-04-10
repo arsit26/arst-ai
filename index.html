@@ -62,9 +62,9 @@
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
                 <i class="ph-fill ph-warning-circle text-4xl text-orange-500"></i>
             </div>
-            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Server Sedang Padat</h3>
+            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Server Sibuk / Limit API</h3>
             <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-                Wah, server Google AI saat ini sedang diakses jutaan orang sedunia nih. <br><br><b>Jangan khawatir!</b> Tunggu sekitar 1-2 menit, lalu coba klik lagi ya.
+                Wah, server Google AI saat ini sedang diakses jutaan orang, <b>atau</b> limit gratis API-mu per menit sudah tercapai. <br><br><b>Jangan khawatir!</b> Tunggu sekitar 1 menit, lalu coba klik lagi ya.
             </p>
             <button onclick="closeBusyModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
                 Oke, Saya Tunggu 👍
@@ -248,7 +248,8 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        async function fetchAI(prompt, model = "gemini-2.5-flash") {
+        // PERBAIKAN: Menggunakan versi model yang paling stabil dan sesuai
+        async function fetchAI(prompt, model = "gemini-2.5-flash-preview-09-2025") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -262,7 +263,7 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Deteksi jika server Google sedang High Demand/Sibuk
+                // Deteksi jika server Google sedang High Demand/Sibuk atau Limit Kuota 429 tercapai
                 if (response.status === 503 || response.status === 429 || (data.error?.message && data.error.message.toLowerCase().includes("high demand"))) {
                     showBusyPopup();
                     throw new Error("SILENT_ERROR"); // Mencegah tulisan merah muncul
