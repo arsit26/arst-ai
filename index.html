@@ -203,6 +203,7 @@
     </div>
 
     <script>
+        const canvasApiKey = ""; // Variabel ajaib khusus Canvas
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
@@ -228,40 +229,61 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // KINI DIKUNCI DI MODEL PALING STABIL (gemini-1.5-flash) TANPA FALLBACK
-        async function fetchAI(prompt, model = "gemini-1.5-flash") {
-            const key = apiKeyInput.value.trim();
+        // SISTEM AUTO-PILOT MODEL (KEBAL ERROR NOT FOUND)
+        async function fetchAI(prompt) {
+            const key = apiKeyInput.value.trim() || canvasApiKey;
             if (!key) { 
                 settingsModal.classList.remove('hidden'); 
                 throw new Error("API Key belum diset di pengaturan!"); 
             }
             
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    // Deteksi limit kuota atau antrean sibuk (429/503)
+            // AI akan mencoba model 1 (untuk Publik), jika gagal otomatis coba model 2 (untuk Canvas).
+            const models = [
+                "gemini-1.5-flash", 
+                "gemini-2.5-flash-preview-09-2025",
+                "gemini-2.0-flash",
+                "gemini-pro"
+            ];
+
+            let lastError = "";
+
+            for (const model of models) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Kalau berhasil, langsung kirim datanya dan hentikan loop!
+                    if (response.ok) {
+                        return data;
+                    }
+                    
+                    // Jika model tidak ditemukan di environment saat ini (404), biarkan lanjut ke model berikutnya
+                    if (response.status === 404) {
+                        lastError = data.error?.message;
+                        continue;
+                    }
+                    
+                    // Jika limit/kuota benar-benar habis, baru munculkan pop-up
                     if (response.status === 429 || response.status === 503 || (data.error?.message && data.error.message.includes("Quota"))) {
                         document.getElementById('busyModal').classList.remove('hidden');
                         throw new Error("SILENT_ERROR");
                     }
                     
-                    // Tampilkan pesan error sesungguhnya jika ada masalah
                     throw new Error(data.error?.message || "Kesalahan API Google.");
+                } catch (err) {
+                    if (err.message === "SILENT_ERROR") throw err;
+                    lastError = err.message;
                 }
-                return data;
-            } catch (err) {
-                if (err.message === "SILENT_ERROR") throw err;
-                throw err;
             }
+            
+            // Jika semua model dalam daftar ditolak
+            throw new Error("Gagal terhubung ke AI. Pesan: " + lastError);
         }
 
         document.getElementById('productToggle').onchange = function() {
@@ -347,11 +369,10 @@
             btn.disabled = true; loader.classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
 
-            // Gunakan instruksi natural language untuk TTS
             const prompt = `Say in a ${tone} tone: ${text}`;
             
             try {
-                const key = apiKeyInput.value.trim();
+                const key = apiKeyInput.value.trim() || canvasApiKey;
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
