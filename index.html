@@ -203,7 +203,6 @@
     </div>
 
     <script>
-        const canvasApiKey = ""; // Variabel ajaib khusus Canvas
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
@@ -229,61 +228,35 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // SISTEM AUTO-PILOT MODEL (KEBAL ERROR NOT FOUND)
-        async function fetchAI(prompt) {
-            const key = apiKeyInput.value.trim() || canvasApiKey;
+        // KODE BERSIH: HANYA MENGGUNAKAN 1 MODEL TANPA LOOP SPAM
+        async function fetchAI(prompt, modelName = "gemini-1.5-flash") {
+            const key = apiKeyInput.value.trim();
             if (!key) { 
                 settingsModal.classList.remove('hidden'); 
                 throw new Error("API Key belum diset di pengaturan!"); 
             }
             
-            // AI akan mencoba model 1 (untuk Publik), jika gagal otomatis coba model 2 (untuk Canvas).
-            const models = [
-                "gemini-1.5-flash", 
-                "gemini-2.5-flash-preview-09-2025",
-                "gemini-2.0-flash",
-                "gemini-pro"
-            ];
-
-            let lastError = "";
-
-            for (const model of models) {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    // Kalau berhasil, langsung kirim datanya dan hentikan loop!
-                    if (response.ok) {
-                        return data;
-                    }
-                    
-                    // Jika model tidak ditemukan di environment saat ini (404), biarkan lanjut ke model berikutnya
-                    if (response.status === 404) {
-                        lastError = data.error?.message;
-                        continue;
-                    }
-                    
-                    // Jika limit/kuota benar-benar habis, baru munculkan pop-up
-                    if (response.status === 429 || response.status === 503 || (data.error?.message && data.error.message.includes("Quota"))) {
-                        document.getElementById('busyModal').classList.remove('hidden');
-                        throw new Error("SILENT_ERROR");
-                    }
-                    
-                    throw new Error(data.error?.message || "Kesalahan API Google.");
-                } catch (err) {
-                    if (err.message === "SILENT_ERROR") throw err;
-                    lastError = err.message;
-                }
-            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
             
-            // Jika semua model dalam daftar ditolak
-            throw new Error("Gagal terhubung ke AI. Pesan: " + lastError);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Hanya munculkan pop-up jika benar-benar antrean padat (429 limit atau 503)
+                if (response.status === 429 || response.status === 503 || (data.error?.message && data.error.message.includes("Quota"))) {
+                    document.getElementById('busyModal').classList.remove('hidden');
+                    throw new Error("SILENT_ERROR");
+                }
+                
+                // Jika error lain, tampilkan pesan aslinya agar kita tahu
+                throw new Error(data.error?.message || `Error Kode: ${response.status}`);
+            }
+            return data;
         }
 
         document.getElementById('productToggle').onchange = function() {
@@ -308,7 +281,8 @@
             const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton tinggi. Format wajib: <H>teks</H> per opsi. Jangan gunakan simbol rumit.`;
 
             try {
-                const res = await fetchAI(prompt);
+                // Tembak langsung ke model stabil
+                const res = await fetchAI(prompt, "gemini-1.5-flash");
                 const text = res.candidates[0].content.parts[0].text;
                 const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
                 
@@ -346,7 +320,8 @@
             const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Gunakan bahasa storytelling manusiawi, bukan bahasa robot. Format wajib: <NARASI>teks narasi lengkap</NARASI><CTA>teks kesimpulan/cta</CTA>`;
 
             try {
-                const res = await fetchAI(prompt);
+                // Tembak langsung ke model stabil
+                const res = await fetchAI(prompt, "gemini-1.5-flash");
                 const text = res.candidates[0].content.parts[0].text;
                 const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
 
@@ -372,7 +347,8 @@
             const prompt = `Say in a ${tone} tone: ${text}`;
             
             try {
-                const key = apiKeyInput.value.trim() || canvasApiKey;
+                // Untuk suara menggunakan model TTS beta (didukung semua key)
+                const key = apiKeyInput.value.trim();
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
@@ -394,7 +370,7 @@
                         document.getElementById('busyModal').classList.remove('hidden');
                         throw new Error("SILENT_ERROR");
                     }
-                    throw new Error(data.error?.message || "Kesalahan TTS.");
+                    throw new Error(`Kesalahan TTS: ${data.error?.message}`);
                 }
 
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
