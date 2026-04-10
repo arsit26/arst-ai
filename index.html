@@ -62,12 +62,12 @@
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
                 <i class="ph-fill ph-warning-circle text-4xl text-orange-500"></i>
             </div>
-            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Server Sedang Padat</h3>
+            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Limit Terlampaui</h3>
             <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-                Wah, sepertinya antrean di Google AI sedang sangat panjang atau batas limit gratisan Anda sudah tercapai untuk menit ini. <br><br><b>Saran:</b> Tunggu sekitar 1 menit, lalu coba klik tombolnya lagi ya.
+                Anda menggunakan API Gratis Google yang membatasi jumlah klik per menit. <br><br><b>Saran:</b> Tunggu sekitar 15-30 detik saja, lalu klik tombolnya lagi.
             </p>
             <button onclick="document.getElementById('busyModal').classList.add('hidden')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
-                Oke, Saya Mengerti 👍
+                Oke, Saya Tunggu 👍
             </button>
         </div>
     </div>
@@ -228,34 +228,45 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // MENGGUNAKAN gemini-1.5-flash (Model paling stabil dan tersedia luas)
+        // MENGGUNAKAN gemini-1.5-flash (Model paling stabil dan didukung luas)
         async function fetchAI(prompt, model = "gemini-1.5-flash") {
             const key = apiKeyInput.value.trim();
             if (!key) { 
                 settingsModal.classList.remove('hidden'); 
-                throw new Error("API Key belum diset!"); 
+                throw new Error("API Key belum diset di pengaturan!"); 
             }
             
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                // Hanya munculkan pop-up jika benar-benar antrean padat (429/503)
-                if (response.status === 429 || response.status === 503) {
-                    document.getElementById('busyModal').classList.remove('hidden');
-                    throw new Error("SILENT_ERROR");
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    // Deteksi limit kuota atau antrean sibuk (429/503)
+                    if (response.status === 429 || response.status === 503 || (data.error?.message && data.error.message.includes("Quota"))) {
+                        document.getElementById('busyModal').classList.remove('hidden');
+                        throw new Error("SILENT_ERROR");
+                    }
+                    
+                    // Otomatis coba ganti nama model jika "Not Found"
+                    if (data.error?.message && data.error.message.includes("not found") && model === "gemini-1.5-flash") {
+                         console.warn("Mencoba model alternatif...");
+                         return await fetchAI(prompt, "gemini-pro"); 
+                    }
+                    
+                    throw new Error(data.error?.message || "Kesalahan API Google.");
                 }
-                // Jika error lain (seperti model not found), munculkan pesan error biasa
-                throw new Error(data.error?.message || "Kesalahan API Google.");
+                return data;
+            } catch (err) {
+                if (err.message === "SILENT_ERROR") throw err;
+                throw err;
             }
-            return data;
         }
 
         document.getElementById('productToggle').onchange = function() {
@@ -277,13 +288,15 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton tinggi. Format wajib: <H>teks</H> per opsi.`;
+            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton tinggi. Format wajib: <H>teks</H> per opsi. Jangan gunakan simbol rumit.`;
 
             try {
                 const res = await fetchAI(prompt);
                 const text = res.candidates[0].content.parts[0].text;
                 const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
                 
+                if (hooks.length === 0) throw new Error("Format AI tidak sesuai, silakan coba klik lagi.");
+
                 const list = document.getElementById('hookList');
                 list.innerHTML = "";
                 hooks.forEach(h => {
@@ -313,7 +326,7 @@
             btn.disabled = true; loader.classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Gunakan bahasa storytelling manusiawi. Format wajib: <NARASI>teks</NARASI><CTA>teks</CTA>`;
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Gunakan bahasa storytelling manusiawi, bukan bahasa robot. Format wajib: <NARASI>teks narasi lengkap</NARASI><CTA>teks kesimpulan/cta</CTA>`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -339,12 +352,36 @@
             btn.disabled = true; loader.classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
 
+            // Gunakan instruksi natural language untuk TTS
             const prompt = `Say in a ${tone} tone: ${text}`;
             
             try {
-                // Model TTS menggunakan versi preview sesuai instruksi sistem
-                const res = await fetchAI(prompt, "gemini-1.5-flash"); // Gunakan model 1.5 jika model preview ditolak
-                const pcm64 = res.candidates[0].content.parts[0].inlineData.data;
+                const key = apiKeyInput.value.trim();
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { 
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (response.status === 429 || response.status === 503) {
+                        document.getElementById('busyModal').classList.remove('hidden');
+                        throw new Error("SILENT_ERROR");
+                    }
+                    throw new Error(data.error?.message || "Kesalahan TTS.");
+                }
+
+                const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
                 const pcm = new Int16Array(bin.length / 2);
                 for (let i = 0; i < pcm.length; i++) pcm[i] = bin.charCodeAt(i*2) | (bin.charCodeAt(i*2+1) << 8);
@@ -379,7 +416,7 @@
         document.getElementById('copyBtn').onclick = () => {
             const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
             navigator.clipboard.writeText(t);
-            alert("Tersalin!");
+            alert("Berhasil disalin!");
         };
     </script>
 </body>
