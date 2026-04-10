@@ -248,8 +248,8 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // PERBAIKAN: Menggunakan versi model yang paling stabil dan sesuai
-        async function fetchAI(prompt, model = "gemini-2.5-flash-preview-09-2025") {
+        // KEMBALI MENGGUNAKAN gemini-2.5-flash YANG VALID DAN AMAN
+        async function fetchAI(prompt, model = "gemini-2.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
