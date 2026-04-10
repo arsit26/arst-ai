@@ -3,11 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Meta tag Anti-Cache untuk memaksa browser membaca kode terbaru -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
     <title>ARST AI - Human Storytelling Script</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -58,22 +53,6 @@
                 </p>
             </div>
             <button id="saveSettingsBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">Simpan & Tutup</button>
-        </div>
-    </div>
-
-    <!-- Modal Server Sibuk (Pop Up Khusus High Demand) -->
-    <div id="busyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300 relative">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
-                <i class="ph-fill ph-warning-circle text-4xl text-orange-500"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Server Sibuk / Limit API</h3>
-            <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-                Wah, server Google AI saat ini sedang diakses jutaan orang, <b>atau</b> limit gratis API-mu per menit sudah tercapai. <br><br><b>Jangan khawatir!</b> Tunggu sekitar 1 menit, lalu coba klik lagi ya.
-            </p>
-            <button onclick="closeBusyModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
-                Oke, Saya Tunggu 👍
-            </button>
         </div>
     </div>
 
@@ -229,23 +208,6 @@
             settingsModal.classList.add('hidden');
         };
 
-        // Fungsi Animasi Modal Server Sibuk
-        function showBusyPopup() {
-            const modal = document.getElementById('busyModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.children[0].classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeBusyModal() {
-            const modal = document.getElementById('busyModal');
-            modal.classList.add('opacity-0');
-            modal.children[0].classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
         window.copyToTTS = (id) => {
             const txt = document.getElementById(id).innerText;
             const current = document.getElementById('ttsInput').value;
@@ -253,7 +215,6 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // KEMBALI MENGGUNAKAN gemini-2.5-flash YANG VALID DAN AMAN
         async function fetchAI(prompt, model = "gemini-2.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
@@ -268,11 +229,6 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Deteksi jika server Google sedang High Demand/Sibuk atau Limit Kuota 429 tercapai
-                if (response.status === 503 || response.status === 429 || (data.error?.message && data.error.message.toLowerCase().includes("high demand"))) {
-                    showBusyPopup();
-                    throw new Error("SILENT_ERROR"); // Mencegah tulisan merah muncul
-                }
                 throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
             }
             return data;
@@ -332,11 +288,8 @@
                 });
                 document.getElementById('hookSelectionArea').classList.remove('hidden');
                 setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { 
-                if(e.message !== "SILENT_ERROR") showError(e.message); 
-            } finally { 
-                btn.disabled = false; loader.classList.add('hidden'); 
-            }
+            } catch(e) { showError(e.message); }
+            finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
         // STEP 2: SCRIPT
@@ -377,11 +330,8 @@
                 document.getElementById('outCTA').innerText = extract('CTA');
                 document.getElementById('resultArea').classList.remove('hidden');
                 setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { 
-                if(e.message !== "SILENT_ERROR") showError(e.message); 
-            } finally { 
-                btn.disabled = false; loader.classList.add('hidden'); 
-            }
+            } catch(e) { showError(e.message); }
+            finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
         // STEP 3: VOICE GENERATION
@@ -412,15 +362,7 @@
                 });
                 
                 const data = await res.json();
-                
-                if (!res.ok) {
-                    // Deteksi High Demand untuk Suara
-                    if (res.status === 503 || res.status === 429 || (data.error?.message && data.error.message.toLowerCase().includes("high demand"))) {
-                        showBusyPopup();
-                        throw new Error("SILENT_ERROR");
-                    }
-                    throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
-                }
+                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
                 
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
@@ -433,11 +375,8 @@
                 document.getElementById('downloadAudio').href = audioUrl;
                 document.getElementById('ttsAudioArea').classList.remove('hidden');
                 document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { 
-                if(e.message !== "SILENT_ERROR") showError(e.message); 
-            } finally { 
-                btn.disabled = false; loader.classList.add('hidden'); 
-            }
+            } catch(e) { showError(e.message); }
+            finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
         function pcmToWav(pcm, rate) {
