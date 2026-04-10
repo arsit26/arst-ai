@@ -18,6 +18,8 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .hook-scroll::-webkit-scrollbar { width: 6px; }
+        .hook-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .animate-pulse-slow { animation: pulse 3s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
     </style>
@@ -33,7 +35,7 @@
 
     <!-- Modal Pengaturan -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative transform transition-all">
             <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
                 <i class="ph ph-x text-2xl"></i>
             </button>
@@ -41,8 +43,14 @@
                 <i class="ph-fill ph-gear text-blue-600"></i> Pengaturan
             </h2>
             <div class="mb-6">
-                <label for="userApiKey" class="block text-sm font-bold text-slate-700 mb-2">API Key Gemini</label>
+                <label for="userApiKey" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                    <i class="ph-fill ph-key text-blue-600"></i> API Key Gemini
+                </label>
                 <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="AIzaSyBxxxx...">
+                <p class="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+                    Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition-colors">Dapatkan gratis di sini</a>.<br>
+                    <span class="text-green-600 font-bold"><i class="ph-fill ph-lock-key"></i> Aman. Disimpan hanya di memori browser Anda sendiri.</span>
+                </p>
             </div>
             <button id="saveSettingsBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">Simpan & Tutup</button>
         </div>
@@ -83,7 +91,7 @@
                     </label>
                 </div>
                 <div id="productInputContainer" class="hidden mt-4">
-                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 text-sm focus:border-orange-500 outline-none" placeholder="Masukkan Nama Brand & Detail Produk di sini..."></textarea>
+                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 text-sm focus:border-orange-500 outline-none" placeholder="Masukkan Nama Brand & Detail Produk di sini. AI akan menggunakannya secara langsung tanpa tanda kurung..."></textarea>
                 </div>
             </div>
 
@@ -108,18 +116,18 @@
             </button>
         </div>
 
-        <!-- HOOK SELECTION -->
-        <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all">
+        <!-- HOOK SECTION -->
+        <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
             <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-3">Pilih Opsi HOOK</h2>
             <div id="hookList" class="space-y-3 mb-6"></div>
-            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 rounded-2xl flex justify-center items-center gap-3 transition-all">
+            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 rounded-2xl flex justify-center items-center gap-3">
                 <i class="ph-fill ph-sparkle text-xl"></i> <span>Lanjut Buat Cerita Lengkap ✨</span>
                 <div id="loadingScript" class="loader hidden"></div>
             </button>
         </div>
 
-        <!-- SCRIPT RESULT AREA -->
-        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6">
+        <!-- RESULT SECTION -->
+        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h2 class="text-2xl font-bold text-slate-800">Script Human-Story</h2>
                 <button id="copyBtn" class="bg-indigo-50 text-indigo-700 py-2 px-4 rounded-xl font-bold border border-indigo-100 text-sm">Salin Semua</button>
@@ -133,17 +141,17 @@
                 <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100 group relative">
                     <button onclick="copyToTTS('outNarasi')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-purple-600 text-white text-[10px] px-2 py-1 rounded-md transition-all">Kirim ke Suara ↓</button>
                     <h3 class="text-[10px] font-bold text-purple-800 uppercase mb-1">Narasi Jujur</h3>
-                    <div id="outNarasi" class="text-slate-700 leading-relaxed font-medium italic whitespace-pre-wrap"></div>
+                    <div id="outNarasi" class="text-slate-700 leading-relaxed font-medium italic"></div>
                 </div>
                 <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 group relative">
                     <button onclick="copyToTTS('outCTA')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-orange-600 text-white text-[10px] px-2 py-1 rounded-md transition-all">Kirim ke Suara ↓</button>
-                    <h3 class="text-[10px] font-bold text-orange-800 uppercase mb-1">Kesimpulan (CTA)</h3>
+                    <h3 class="text-[10px] font-bold text-orange-800 uppercase mb-1">Kesimpulan (CTA Halus)</h3>
                     <div id="outCTA" class="text-slate-700 font-bold"></div>
                 </div>
             </div>
         </div>
 
-        <!-- VOICE GENERATOR AREA -->
+        <!-- VOICE GENERATOR -->
         <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8">
             <h2 class="text-xl font-bold mb-6 flex items-center gap-3 border-b pb-3">
                 <i class="ph-fill ph-speaker-hifi text-blue-600"></i> AI Voice Generator
@@ -158,9 +166,9 @@
                         <option value="Fenrir">👨 Fenrir - Berwibawa</option>
                     </select>
                     <select id="voiceTone" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium">
-                        <option value="cheerful">Ceria / Semangat</option>
-                        <option value="calm">Tenang / Santai</option>
-                        <option value="serious">Serius</option>
+                        <option value="santai">Nada Curhat / Santai</option>
+                        <option value="semangat">Nada Semangat</option>
+                        <option value="serius">Nada Serius</option>
                     </select>
                 </div>
                 <button id="btnGenerateTTS" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all hover:brightness-110">
@@ -168,6 +176,10 @@
                     <div id="loadingTTS" class="loader hidden"></div>
                 </button>
                 <div id="ttsAudioArea" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl animate-pulse-slow">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-xs font-bold text-blue-700 tracking-widest">AUDIO SIAP</span>
+                        <a id="downloadAudio" href="#" download="arst-ai-voice.wav" class="text-blue-600 text-xs font-bold underline">Download MP3</a>
+                    </div>
                     <audio id="ttsAudioPlayer" controls class="w-full"></audio>
                 </div>
             </div>
@@ -175,14 +187,18 @@
     </div>
 
     <script>
-        const settingsModal = document.getElementById('settingsModal');
-        const apiKeyInput = document.getElementById('userApiKey');
+        const apiKey = ""; 
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
+        const settingsModal = document.getElementById('settingsModal');
+        const apiKeyInput = document.getElementById('userApiKey');
+
         window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('arst_api_key');
-            if (savedKey) apiKeyInput.value = savedKey;
+            try {
+                const savedKey = localStorage.getItem('arst_api_key');
+                if (savedKey) apiKeyInput.value = savedKey;
+            } catch (e) {}
         });
 
         document.getElementById('settingsBtn').onclick = () => settingsModal.classList.remove('hidden');
@@ -196,38 +212,35 @@
             const txt = document.getElementById(id).innerText;
             const current = document.getElementById('ttsInput').value;
             document.getElementById('ttsInput').value = (current ? current + "\n\n" : "") + txt;
-            document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // Fungsi Universal Fetch dengan Sistem Retry Otomatis
-        async function fetchAI(prompt, model = "gemini-1.5-flash") {
-            const key = apiKeyInput.value.trim();
-            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key kosong!"); }
-            
+        // KESALAHAN TELAH DIPERBAIKI DI SINI: Model default menjadi gemini-2.5-flash
+        async function fetchAI(prompt, model = "gemini-2.5-flash") {
+            const key = apiKey || apiKeyInput.value.trim();
+            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             
-            const delays = [1000, 2000, 4000];
-            for (let i = 0; i <= delays.length; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error?.message || "Server Error");
-                    return data;
-                } catch (error) {
-                    if (i === delays.length) throw error;
-                    await new Promise(res => setTimeout(res, delays[i]));
-                }
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Menangkap pesan error asli dari Google API (bukan pesan generic lagi)
+                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
             }
+            return data;
         }
 
         document.getElementById('productToggle').onchange = function() {
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         };
 
+        // STEP 1: HOOKS (SANGAT PENDEK & NENDANG)
         document.getElementById('btnGenerateHook').onclick = async () => {
             const title = document.getElementById('title').value.trim();
             if (!title) return;
@@ -237,15 +250,21 @@
 
             const isSelling = document.getElementById('productToggle').checked;
             const product = document.getElementById('productDesc').value.trim();
-            const types = Array.from(document.querySelectorAll('input[name="type"]:checked')).map(cb => cb.value).join(', ');
+            const checkboxes = document.querySelectorAll('input[name="type"]:checked');
+            const types = Array.from(checkboxes).map(cb => cb.value).join(', ');
 
-            currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Produk: ' + product : 'Non-Jualan.'}`;
+            currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Buat 4 opsi HOOK video singkat (3-5 detik) untuk topik: ${title}. 
-            Format WAJIB: Gunakan tag <H>Teks Hook</H> untuk setiap opsi. Buat sangat natural dan membuat penasaran.`;
+            const prompt = `Buat 4 opsi HOOK TikTok untuk topik: ${title}.
+            ATURAN KETAT (ANTI LEBAY):
+            1. SUPER SINGKAT. Maksimal 1-2 kalimat pendek (3 detik baca).
+            2. LANGSUNG NENDANG. Jangan ada sapaan "Halo guys", "Pernah gak sih", atau opening basa-basi.
+            3. DILARANG ALAY. Jangan pakai kata "bestie", "jujurly", "gila sih". Pakai bahasa normal yang datar tapi bikin penasaran.
+            4. Jangan pake tanda kurung siku [ ].
+            Format: <H>teks</H> per opsi.`;
 
             try {
-                const res = await fetchAI(prompt, "gemini-1.5-flash");
+                const res = await fetchAI(prompt);
                 const text = res.candidates[0].content.parts[0].text;
                 const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
                 
@@ -266,62 +285,77 @@
                     list.appendChild(d);
                 });
                 document.getElementById('hookSelectionArea').classList.remove('hidden');
-            } catch(e) { showError("Gagal membuat Hook: " + e.message); }
+                setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
+        // STEP 2: SCRIPT (ANTI-LEBAY & CUEK)
         document.getElementById('btnGenerateScript').onclick = async () => {
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
-            const duration = document.getElementById('duration').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const wordCount = Math.floor(duration * 2.2);
+
             btn.disabled = true; loader.classList.remove('hidden');
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi naskah lengkap ${duration} detik. 
-            Data: ${currentInputData}. Format WAJIB: <NARASI>isi naskah narasi</NARASI> <CTA>ajakan bertindak</CTA>. 
-            Gunakan gaya bahasa manusia yang santai, jangan kaku.`;
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi utuh berdurasi ${duration} detik (~${wordCount} kata).
+            DATA: ${currentInputData}.
+            ATURAN NARASI (ANTI-LEBAY): 
+            1. NADA DATAR & REALISTIS: Ceritanya mengalir biasa saja. Jangan mendramatisir, jangan over-excited. Gaya bicaranya seperti curhat cuek ke teman, bukan gaya sales.
+            2. DILARANG KATA ALAY: Jangan pakai kata "bestie", "jujurly", "sumpah", "gila sih".
+            3. HINDARI KATA KAKU: Jangan pakai "sangat bagus", "solusi terbaik", "luar biasa".
+            4. Jika ada produk, sebutkan fiturnya tanpa memuji berlebihan. Jangan pakai kurung siku [].
+            
+            ATURAN CTA (ANTI-HARD SELLING):
+            1. Super singkat (Maksimal 8 kata).
+            2. Nada cuek seakan-akan tidak peduli orang mau beli atau tidak. (Contoh: "Link ada di bio kalo mau", "Cek keranjang aja ya", "Terserah sih mau cek bio atau nggak").
+            
+            Format XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
 
             try {
-                const res = await fetchAI(prompt, "gemini-1.5-flash");
+                const res = await fetchAI(prompt);
                 const text = res.candidates[0].content.parts[0].text;
-                
-                const narasi = (text.match(/<NARASI>([\s\S]*?)<\/NARASI>/i) || ["",""])[1].trim();
-                const cta = (text.match(/<CTA>([\s\S]*?)<\/CTA>/i) || ["",""])[1].trim();
+                const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
 
                 document.getElementById('outHook').innerText = selectedHookText;
-                document.getElementById('outNarasi').innerText = narasi;
-                document.getElementById('outCTA').innerText = cta;
+                document.getElementById('outNarasi').innerText = extract('NARASI');
+                document.getElementById('outCTA').innerText = extract('CTA');
                 document.getElementById('resultArea').classList.remove('hidden');
-                document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' });
-            } catch(e) { showError("Gagal membuat Narasi: " + e.message); }
+                setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
+        // STEP 3: VOICE GENERATION
         document.getElementById('btnGenerateTTS').onclick = async () => {
             const text = document.getElementById('ttsInput').value.trim();
             const character = document.getElementById('voiceCharacter').value;
             const tone = document.getElementById('voiceTone').value;
             if (!text) return;
-
             const btn = document.getElementById('btnGenerateTTS');
             const loader = document.getElementById('loadingTTS');
             btn.disabled = true; loader.classList.remove('hidden');
 
-            const key = apiKeyInput.value.trim();
+            const prompt = `Say in a ${tone} tone: ${text}`;
+            const key = apiKey || apiKeyInput.value.trim();
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
-
+            
             try {
-                const response = await fetch(url, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Say in a ${tone} tone: ${text}` }] }],
+                        contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: { 
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
                         }
                     })
                 });
-                const data = await response.json();
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
                 
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
@@ -329,10 +363,12 @@
                 for (let i = 0; i < pcm.length; i++) pcm[i] = bin.charCodeAt(i*2) | (bin.charCodeAt(i*2+1) << 8);
 
                 const wav = pcmToWav(pcm, 24000);
-                document.getElementById('ttsAudioPlayer').src = URL.createObjectURL(wav);
+                const audioUrl = URL.createObjectURL(wav);
+                document.getElementById('ttsAudioPlayer').src = audioUrl;
+                document.getElementById('downloadAudio').href = audioUrl;
                 document.getElementById('ttsAudioArea').classList.remove('hidden');
                 document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { showError("Gagal membuat Suara: " + e.message); }
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
@@ -351,13 +387,13 @@
         function showError(msg) {
             document.getElementById('errorText').innerText = msg;
             document.getElementById('errorMessage').classList.remove('hidden');
-            document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => { document.getElementById('errorMessage').classList.add('hidden'); }, 7000);
         }
 
         document.getElementById('copyBtn').onclick = () => {
             const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
             const area = document.createElement('textarea'); area.value = t; document.body.appendChild(area); area.select(); document.execCommand('copy'); document.body.removeChild(area);
-            alert("Teks tersalin!");
+            alert("Tersalin!");
         };
     </script>
 </body>
