@@ -228,7 +228,7 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // MENGGUNAKAN gemini-1.5-flash (Model paling stabil dan didukung luas)
+        // KINI DIKUNCI DI MODEL PALING STABIL (gemini-1.5-flash) TANPA FALLBACK
         async function fetchAI(prompt, model = "gemini-1.5-flash") {
             const key = apiKeyInput.value.trim();
             if (!key) { 
@@ -254,12 +254,7 @@
                         throw new Error("SILENT_ERROR");
                     }
                     
-                    // Otomatis coba ganti nama model jika "Not Found"
-                    if (data.error?.message && data.error.message.includes("not found") && model === "gemini-1.5-flash") {
-                         console.warn("Mencoba model alternatif...");
-                         return await fetchAI(prompt, "gemini-pro"); 
-                    }
-                    
+                    // Tampilkan pesan error sesungguhnya jika ada masalah
                     throw new Error(data.error?.message || "Kesalahan API Google.");
                 }
                 return data;
