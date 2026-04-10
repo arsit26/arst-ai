@@ -26,12 +26,14 @@
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 text-slate-800 font-sans antialiased p-4 md:p-8 min-h-screen flex flex-col items-center relative">
 
+    <!-- Tombol Pengaturan -->
     <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50">
         <button id="settingsBtn" class="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-blue-600 hover:shadow-lg transition-all">
             <i class="ph-fill ph-gear text-2xl"></i>
         </button>
     </div>
 
+    <!-- Modal Pengaturan -->
     <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative transform transition-all">
             <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
@@ -67,6 +69,7 @@
             <p id="errorText" class="text-sm font-medium"></p>
         </div>
 
+        <!-- INPUT SECTION -->
         <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 relative overflow-hidden">
             <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b pb-3">
                 <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Apa Cerita Hari Ini?
@@ -113,6 +116,7 @@
             </button>
         </div>
 
+        <!-- HOOK SECTION -->
         <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
             <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-3">Pilih Opsi HOOK</h2>
             <div id="hookList" class="space-y-3 mb-6"></div>
@@ -122,6 +126,7 @@
             </button>
         </div>
 
+        <!-- RESULT SECTION -->
         <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h2 class="text-2xl font-bold text-slate-800">Script Human-Story</h2>
@@ -146,6 +151,7 @@
             </div>
         </div>
 
+        <!-- VOICE GENERATOR -->
         <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8">
             <h2 class="text-xl font-bold mb-6 flex items-center gap-3 border-b pb-3">
                 <i class="ph-fill ph-speaker-hifi text-blue-600"></i> AI Voice Generator
@@ -209,11 +215,12 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // PERBAIKAN: Mengubah v1beta menjadi v1 dan model default menjadi gemini-1.5-flash
+        // Fungsi fetchAI yang sudah diperbaiki endpoint-nya
         async function fetchAI(prompt, model = "gemini-1.5-flash") {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
-            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+            // Menggunakan v1beta dengan model yang stabil
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -224,7 +231,7 @@
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
+                throw new Error(data.error?.message || "Terjadi kesalahan pada server AI.");
             }
             return data;
         }
@@ -233,7 +240,7 @@
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         };
 
-        // STEP 1: HOOKS 
+        // STEP 1: HOOKS
         document.getElementById('btnGenerateHook').onclick = async () => {
             const title = document.getElementById('title').value.trim();
             if (!title) return;
@@ -249,15 +256,7 @@
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
             const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video (maksimal 3-5 detik diucapkan) untuk topik: ${title}.
-            
-            ATURAN PENULISAN HOOK:
-            1. TANPA BASA-BASI: Jangan pakai intro panjang atau sapaan ("Halo guys"). Langsung jawab: "Kenapa penonton harus peduli dengan video ini?"
-            2. VERBAL HOOK KUAT: Gunakan pernyataan kontroversial, pertanyaan retoris tajam, atau janji hasil akhir.
-            3. FOKUS RETENSI: Buat kalimat yang menghentikan jempol audiens saat mereka sedang scrolling.
-            4. MENULIS UNTUK TELINGA: Gunakan kalimat pendek yang enak diucapkan (tidak membelit lidah). Gunakan kata ganti "kamu" atau "kita".
-            5. DILARANG menggunakan tanda kurung siku [ ].
-            
-            Format WAJIB: <H>teks</H> per opsi.`;
+            ATURAN: Langsung buat hook tanpa basa-basi. Format WAJIB: <H>teks</H> per opsi.`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -295,23 +294,7 @@
 
             btn.disabled = true; loader.classList.remove('hidden');
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik (~${wordCount} kata).
-            DATA KONTEN: ${currentInputData}.
-            
-            ATURAN NARASI (PETA EMOSI & RETENSI):
-            1. TEKNIK OPEN LOOPS: Sampaikan informasi tapi simpan "kuncinya" untuk nanti agar penonton terus menonton karena penasaran.
-            2. PACING DINAMIS: Selang-seling antara informasi padat, hiburan ringan, dan momen refleksi agar penonton tidak kelelahan informasi (brain fog).
-            3. EMOSI > INFORMASI: Gunakan pendekatan Storytelling (Ada masalah/antagonis, ada solusi/pahlawan, ada transformasi). Buat agar penonton "merasakan" kontennya.
-            4. RELATABILITAS: Gunakan bahasa yang manusiawi, bukan bahasa robot/kamus. Gunakan kata "kamu" dan "kita".
-            5. MENULIS UNTUK TELINGA: Gunakan kalimat-kalimat pendek. Jika dibaca keras, tidak boleh ada kata yang membelit lidah atau bikin kehabisan napas.
-            6. DILARANG menggunakan tanda kurung siku [] untuk data. Langsung integrasikan data secara organik.
-            
-            ATURAN SMART CTA:
-            1. DILARANG menggunakan CTA pasaran seperti "Jangan lupa like dan subscribe" atau "Beli sekarang".
-            2. Buat CTA yang menggerakkan audiens secara natural (Contoh: "Kalau kamu merasa tips nomor 3 ini berguna, coba share ke temanmu yang sering ngalamin hal serupa").
-            3. Sisipkan keyword utama secara organik agar terdeteksi SEO TikTok/YouTube.
-            
-            Format WAJIB XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik. DATA KONTEN: ${currentInputData}. Format WAJIB: <NARASI>teks</NARASI><CTA>teks</CTA>`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -327,7 +310,7 @@
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
-        // STEP 3: VOICE GENERATION
+        // STEP 3: VOICE GENERATION (TTS)
         document.getElementById('btnGenerateTTS').onclick = async () => {
             const text = document.getElementById('ttsInput').value.trim();
             const character = document.getElementById('voiceCharacter').value;
@@ -337,17 +320,15 @@
             const loader = document.getElementById('loadingTTS');
             btn.disabled = true; loader.classList.remove('hidden');
 
-            const prompt = `Say in a ${tone} tone: ${text}`;
             const key = apiKey || apiKeyInput.value.trim();
-            // PERBAIKAN: Menyesuaikan model TTS yang kompatibel dengan endpoint v1
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
             
             try {
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
+                        contents: [{ parts: [{ text: `Say in a ${tone} tone: ${text}` }] }],
                         generationConfig: { 
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
@@ -356,7 +337,7 @@
                 });
                 
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
+                if (!res.ok) throw new Error(data.error?.message || "Kesalahan proses suara.");
                 
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
@@ -385,4 +366,22 @@
             return new Blob([v], { type: 'audio/wav' });
         }
 
-        function showError(msg
+        function showError(msg) {
+            document.getElementById('errorText').innerText = msg;
+            document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('errorMessage').classList.add('hidden'); }, 7000);
+        }
+
+        document.getElementById('copyBtn').onclick = () => {
+            const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
+            const area = document.createElement('textarea'); 
+            area.value = t; 
+            document.body.appendChild(area); 
+            area.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(area);
+            alert("Tersalin!");
+        };
+    </script>
+</body>
+</html>
