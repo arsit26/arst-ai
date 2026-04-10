@@ -215,23 +215,46 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        async function fetchAI(prompt, model = "gemini-2.5-flash") {
+        // ====== SISTEM AUTO-RETRY (ANTI GAGAL/OVERLOAD) ======
+        // Jika server Google kepenuhan (High Demand), sistem tidak akan memunculkan error,
+        // melainkan akan mencoba lagi secara otomatis di latar belakang sampai maksimal 4 kali.
+        async function fetchAI(prompt, model = "gemini-2.5-flash", retries = 4) {
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        // Jika error 503 (High Demand) atau 429 (Too Many Requests), lempar error khusus untuk memicu retry
+                        if (response.status === 503 || response.status === 429) {
+                            throw new Error("SERVER_BUSY");
+                        }
+                        // Jika error lain (misal API key salah), jangan di-retry, langsung hentikan
+                        throw new Error(data.error?.message || "Terjadi kesalahan pada server AI.");
+                    }
+                    return data; // Berhasil
+                } catch (error) {
+                    // Jika error BUKAN karena server sibuk, lempar errornya ke layar
+                    if (error.message !== "SERVER_BUSY" && !error.message.includes("503") && !error.message.includes("429") && !error.message.includes("High demand")) {
+                        throw error; 
+                    }
+                    // Jika ini adalah percobaan terakhir, baru munculkan pesan error
+                    if (i === retries - 1) {
+                        throw new Error("Server Google sedang sangat penuh. Sistem sudah mencoba ulang 4 kali namun gagal. Silakan coba klik lagi dalam beberapa menit.");
+                    }
+                    // Tunggu sebelum mencoba lagi (2 detik, lalu 4 detik, lalu 6 detik)
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
+                }
             }
-            return data;
         }
 
         document.getElementById('productToggle').onchange = function() {
@@ -245,6 +268,7 @@
             const btn = document.getElementById('btnGenerateHook');
             const loader = document.getElementById('loadingHook');
             btn.disabled = true; loader.classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden'); // Sembunyikan error lama
 
             const isSelling = document.getElementById('productToggle').checked;
             const product = document.getElementById('productDesc').value.trim();
@@ -253,7 +277,6 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            // --- PROMPT BARU UNTUK HOOK ---
             const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video (maksimal 3-5 detik diucapkan) untuk topik: ${title}.
             
             ATURAN PENULISAN HOOK:
@@ -300,8 +323,8 @@
             const wordCount = Math.floor(duration * 2.2);
 
             btn.disabled = true; loader.classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
 
-            // --- PROMPT BARU UNTUK NARASI & CTA ---
             const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik (~${wordCount} kata).
             DATA KONTEN: ${currentInputData}.
             
@@ -334,7 +357,7 @@
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
-        // STEP 3: VOICE GENERATION
+        // STEP 3: VOICE GENERATION (Dilengkapi Auto-Retry)
         document.getElementById('btnGenerateTTS').onclick = async () => {
             const text = document.getElementById('ttsInput').value.trim();
             const character = document.getElementById('voiceCharacter').value;
@@ -343,40 +366,63 @@
             const btn = document.getElementById('btnGenerateTTS');
             const loader = document.getElementById('loadingTTS');
             btn.disabled = true; loader.classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
 
             const prompt = `Say in a ${tone} tone: ${text}`;
             const key = apiKey || apiKeyInput.value.trim();
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
             
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { 
-                            responseModalities: ["AUDIO"],
-                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
-                        }
-                    })
-                });
-                
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
-                
-                const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
-                const bin = atob(pcm64);
-                const pcm = new Int16Array(bin.length / 2);
-                for (let i = 0; i < pcm.length; i++) pcm[i] = bin.charCodeAt(i*2) | (bin.charCodeAt(i*2+1) << 8);
+            let success = false;
+            let retries = 4;
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { 
+                                responseModalities: ["AUDIO"],
+                                speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
+                            }
+                        })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (!res.ok) {
+                        if (res.status === 503 || res.status === 429) throw new Error("SERVER_BUSY");
+                        throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
+                    }
+                    
+                    const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
+                    const bin = atob(pcm64);
+                    const pcm = new Int16Array(bin.length / 2);
+                    for (let j = 0; j < pcm.length; j++) pcm[j] = bin.charCodeAt(j*2) | (bin.charCodeAt(j*2+1) << 8);
 
-                const wav = pcmToWav(pcm, 24000);
-                const audioUrl = URL.createObjectURL(wav);
-                document.getElementById('ttsAudioPlayer').src = audioUrl;
-                document.getElementById('downloadAudio').href = audioUrl;
-                document.getElementById('ttsAudioArea').classList.remove('hidden');
-                document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { showError(e.message); }
-            finally { btn.disabled = false; loader.classList.add('hidden'); }
+                    const wav = pcmToWav(pcm, 24000);
+                    const audioUrl = URL.createObjectURL(wav);
+                    document.getElementById('ttsAudioPlayer').src = audioUrl;
+                    document.getElementById('downloadAudio').href = audioUrl;
+                    document.getElementById('ttsAudioArea').classList.remove('hidden');
+                    document.getElementById('ttsAudioPlayer').play();
+                    
+                    success = true;
+                    break; // Berhasil, keluar dari loop
+                } catch(e) {
+                    if (e.message !== "SERVER_BUSY" && !e.message.includes("503") && !e.message.includes("429") && !e.message.includes("High demand")) {
+                        showError(e.message);
+                        break;
+                    }
+                    if (i === retries - 1) {
+                        showError("Server Voice AI Google sedang sangat penuh setelah 4x mencoba. Silakan klik lagi dalam beberapa menit.");
+                    } else {
+                        await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))); // Tunggu sebelum mencoba lagi
+                    }
+                }
+            }
+            btn.disabled = false; loader.classList.add('hidden');
         };
 
         function pcmToWav(pcm, rate) {
