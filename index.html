@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARST AI - Human Storytelling Script</title>
+    <title>ARST AI - Generator Script Otomatis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -16,171 +16,181 @@
             -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
         .hook-scroll::-webkit-scrollbar { width: 6px; }
+        .hook-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .hook-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .animate-pulse-slow { animation: pulse 3s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 text-slate-800 font-sans antialiased p-4 md:p-8 min-h-screen flex flex-col items-center relative">
 
-    <!-- Tombol Pengaturan -->
     <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50">
-        <button id="settingsBtn" class="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-blue-600 hover:shadow-lg transition-all">
+        <button id="settingsBtn" class="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-blue-600 hover:shadow-lg transition-all" title="Pengaturan API Key">
             <i class="ph-fill ph-gear text-2xl"></i>
         </button>
     </div>
 
-    <!-- Modal Pengaturan -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative transform transition-all">
             <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
                 <i class="ph ph-x text-2xl"></i>
             </button>
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-3 text-slate-800">
+            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
                 <i class="ph-fill ph-gear text-blue-600"></i> Pengaturan
             </h2>
             <div class="mb-6">
                 <label for="userApiKey" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
                     <i class="ph-fill ph-key text-blue-600"></i> API Key Gemini
                 </label>
-                <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="AIzaSyBxxxx...">
+                <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner font-mono text-sm" placeholder="Contoh: AIzaSyBxxxx...">
                 <p class="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
                     Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition-colors">Dapatkan gratis di sini</a>.<br>
                     <span class="text-green-600 font-bold"><i class="ph-fill ph-lock-key"></i> Aman. Disimpan hanya di memori browser Anda sendiri.</span>
                 </p>
             </div>
-            <button id="saveSettingsBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">Simpan & Tutup</button>
+            <button id="saveSettingsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
+                Simpan & Tutup
+            </button>
         </div>
     </div>
 
     <div class="max-w-3xl mx-auto w-full pb-20">
-        <div class="text-center mb-10">
+        <div class="text-center mb-10 mt-6 md:mt-0">
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 tracking-tight flex items-center justify-center gap-3">
                 <i class="ph-fill ph-magic-wand text-purple-500"></i> ARST AI
             </h1>
-            <p class="text-slate-600 font-medium italic">Bikin Narasi Kontenmu Hanya Dengan Beberapa Klik.</p>
+            <p class="text-slate-600 font-medium">Bikin Narasi Vidiomu Hanya Dengan Beberapa Klik</p>
         </div>
 
-        <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm">
-            <p class="font-bold flex items-center gap-2 mb-1"><i class="ph-fill ph-warning-circle"></i> Oops! Ada Masalah:</p>
-            <p id="errorText" class="text-sm font-medium"></p>
+        <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm" role="alert">
+            <p class="font-bold flex items-center gap-2"><i class="ph-fill ph-warning-circle"></i> Oops!</p>
+            <p id="errorText">Terjadi kesalahan.</p>
         </div>
 
-        <!-- INPUT SECTION -->
         <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 relative overflow-hidden">
-            <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b pb-3">
-                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Apa Cerita Hari Ini?
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 pointer-events-none"></div>
+            
+            <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Masukkan Detail Konten
             </h2>
 
-            <div class="mb-6">
-                <label for="title" class="block text-sm font-bold text-slate-700 mb-2">Topik atau Masalah Utama</label>
-                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none shadow-inner" placeholder="Contoh: Dompet tipis di akhir bulan tapi pengen kopi enak">
+            <div class="mb-6 relative z-10">
+                <label for="title" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                    <i class="ph ph-text-t text-blue-500"></i> Topik / Judul Konten
+                </label>
+                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner" placeholder="Contoh: Cara mengelola keuangan untuk anak kos">
             </div>
 
-            <div class="mb-6 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+            <div class="mb-6 relative z-10 bg-orange-50/50 p-4 rounded-2xl border border-orange-100 transition-all">
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <i class="ph ph-shopping-bag"></i> Mode Jualan (Soft-Selling)
+                        <i class="ph ph-shopping-bag text-orange-500"></i> Mode Jualan (Afiliator/Seller)
                     </label>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="productToggle" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                     </label>
                 </div>
-                <div id="productInputContainer" class="hidden mt-4">
-                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 text-sm focus:border-orange-500 outline-none" placeholder="Masukkan Nama Brand & Detail Produk di sini. AI akan menggunakannya secara langsung tanpa tanda kurung..."></textarea>
+                
+                <div id="productInputContainer" class="hidden mt-4 transition-all">
+                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all shadow-inner" placeholder="Tempel deskripsi atau keunggulan produk di sini..."></textarea>
+                    <p class="text-xs text-orange-600 mt-2 font-medium"><i class="ph ph-info"></i> Narasi akan diarahkan untuk soft-selling produk ini secara natural.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 relative z-10">
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label class="block text-sm font-bold text-slate-700 mb-3">Tipe Vibe</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="Storytelling" checked> <span class="text-sm">📖 Storytelling Natural</span></label>
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="POV" checked> <span class="text-sm">👁️ POV Jujur</span></label>
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" name="type" value="Edukasi" checked> <span class="text-sm">🧠 Edukasi</span></label>
+                    <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i class="ph ph-list-dashes text-blue-500"></i> Tipe Narasi (Bisa pilih > 1)
+                    </label>
+                    <div class="space-y-3">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Storytelling" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">📖 Storytelling</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="POV" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">👁️ POV</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Edukasi" checked class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🧠 Edukasi</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" name="type" value="Hiburan" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 group-hover:text-blue-600 transition-colors font-medium">🎭 Hiburan</span>
+                        </label>
                     </div>
                 </div>
+
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label for="duration" class="block text-sm font-bold text-slate-700 mb-2">Target Durasi (Detik)</label>
-                    <input type="number" id="duration" value="60" class="w-full px-4 py-3 text-2xl font-bold text-blue-600 text-center rounded-xl border border-slate-200 outline-none">
+                    <label for="duration" class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                        <i class="ph ph-timer text-blue-500"></i> Estimasi Durasi (Detik)
+                    </label>
+                    <input type="number" id="duration" min="15" max="300" value="60" class="w-full px-4 py-3 text-2xl font-bold text-blue-600 text-center rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-inner">
                 </div>
             </div>
 
-            <button id="btnGenerateHook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all transform hover:-translate-y-1">
-                <i class="ph-fill ph-fishing-rod text-xl"></i> <span>Mulai Buat Hook Spontan 🎣</span>
+            <button id="btnGenerateHook" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1">
+                <i class="ph-fill ph-fishing-rod text-xl"></i>
+                <span class="text-lg">1. Buat Opsi Hook 🎣</span>
                 <div id="loadingHook" class="loader hidden"></div>
             </button>
         </div>
 
-        <!-- HOOK SECTION -->
-        <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-3">Pilih Opsi HOOK</h2>
-            <div id="hookList" class="space-y-3 mb-6"></div>
-            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 rounded-2xl flex justify-center items-center gap-3">
-                <i class="ph-fill ph-sparkle text-xl"></i> <span>Lanjut Buat Cerita Lengkap ✨</span>
+        <div id="hookSelectionArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all duration-500 transform translate-y-4 opacity-0">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Pilih Hook Paling Nendang!
+            </h2>
+            <p class="text-sm text-slate-500 mb-4">Pilih satu hook di bawah ini. Narasi akan dibuat menyambung mengalir dari hook yang kamu pilih.</p>
+            
+            <div id="hookList" class="space-y-3 mb-6 max-h-80 overflow-y-auto hook-scroll pr-2">
+            </div>
+
+            <button id="btnGenerateScript" disabled class="w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10">
+                <i class="ph-fill ph-sparkle text-xl"></i>
+                <span class="text-lg">2. Lanjut Buat Narasi & CTA ✨</span>
                 <div id="loadingScript" class="loader hidden"></div>
             </button>
         </div>
 
-        <!-- RESULT SECTION -->
-        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 mb-6 transition-all transform translate-y-4 opacity-0">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h2 class="text-2xl font-bold text-slate-800">Script Human-Story</h2>
-                <button id="copyBtn" class="bg-indigo-50 text-indigo-700 py-2 px-4 rounded-xl font-bold border border-indigo-100 text-sm">Salin Semua</button>
-            </div>
-            <div class="space-y-4">
-                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 group relative">
-                    <button onclick="copyToTTS('outHook')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-blue-600 text-white text-[10px] px-2 py-1 rounded-md transition-all">Kirim ke Suara ↓</button>
-                    <h3 class="text-[10px] font-bold text-blue-800 uppercase mb-1">Hook Spontan</h3>
-                    <div id="outHook" class="text-slate-800 font-bold leading-relaxed"></div>
-                </div>
-                <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100 group relative">
-                    <button onclick="copyToTTS('outNarasi')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-purple-600 text-white text-[10px] px-2 py-1 rounded-md transition-all">Kirim ke Suara ↓</button>
-                    <h3 class="text-[10px] font-bold text-purple-800 uppercase mb-1">Narasi Jujur</h3>
-                    <div id="outNarasi" class="text-slate-700 leading-relaxed font-medium italic"></div>
-                </div>
-                <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 group relative">
-                    <button onclick="copyToTTS('outCTA')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-orange-600 text-white text-[10px] px-2 py-1 rounded-md transition-all">Kirim ke Suara ↓</button>
-                    <h3 class="text-[10px] font-bold text-orange-800 uppercase mb-1">Kesimpulan (CTA Halus)</h3>
-                    <div id="outCTA" class="text-slate-700 font-bold"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- VOICE GENERATOR -->
-        <div class="glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8">
-            <h2 class="text-xl font-bold mb-6 flex items-center gap-3 border-b pb-3">
-                <i class="ph-fill ph-speaker-hifi text-blue-600"></i> AI Voice Generator
-            </h2>
-            <div class="space-y-4">
-                <textarea id="ttsInput" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none text-sm leading-relaxed" placeholder="Teks yang akan diubah jadi suara..."></textarea>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <select id="voiceCharacter" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium">
-                        <option value="Kore">👩 Kore - Ceria & Energik</option>
-                        <option value="Leda">👩 Leda - Lembut (Storytelling)</option>
-                        <option value="Puck">👨 Puck - Ramah (Casual)</option>
-                        <option value="Fenrir">👨 Fenrir - Berwibawa</option>
-                    </select>
-                    <select id="voiceTone" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium">
-                        <option value="santai">Nada Curhat / Santai</option>
-                        <option value="semangat">Nada Semangat</option>
-                        <option value="serius">Nada Serius</option>
-                    </select>
-                </div>
-                <button id="btnGenerateTTS" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all hover:brightness-110">
-                    <i class="ph-fill ph-play-circle text-xl"></i> <span>Ubah Jadi Suara</span>
-                    <div id="loadingTTS" class="loader hidden"></div>
+        <div id="resultArea" class="hidden glass-card rounded-3xl shadow-xl border border-white/50 p-6 md:p-8 transition-all duration-500 transform translate-y-4 opacity-0">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="ph-fill ph-check-circle text-green-500"></i> Script Kamu Sudah Jadi!
+                </h2>
+                <button id="copyBtn" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-4 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm border border-indigo-100">
+                    <i class="ph ph-copy"></i> Salin Semua
                 </button>
-                <div id="ttsAudioArea" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl animate-pulse-slow">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-xs font-bold text-blue-700 tracking-widest">AUDIO SIAP</span>
-                        <a id="downloadAudio" href="#" download="arst-ai-voice.wav" class="text-blue-600 text-xs font-bold underline">Download MP3</a>
-                    </div>
-                    <audio id="ttsAudioPlayer" controls class="w-full"></audio>
+            </div>
+            
+            <div class="space-y-5">
+                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-fishing-rod text-blue-600"></i> Hook Terpilih
+                    </h3>
+                    <div id="outHook" class="whitespace-pre-wrap text-slate-800 font-bold text-lg leading-relaxed"></div>
+                </div>
+                
+                <div class="bg-purple-50/80 border border-purple-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-book-open-text text-purple-600"></i> Isi Narasi
+                    </h3>
+                    <div id="outNarasi" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium"></div>
+                </div>
+
+                <div class="bg-orange-50/80 border border-orange-200 rounded-2xl p-5 relative">
+                    <h3 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-megaphone text-orange-600"></i> Call to Action (CTA)
+                    </h3>
+                    <div id="outCTA" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-bold"></div>
                 </div>
             </div>
         </div>
@@ -188,220 +198,309 @@
 
     <script>
         const apiKey = ""; 
+
+        // === VARIABEL STATE ===
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
+        // === PENGATURAN MODAL & LOCAL STORAGE ===
         const settingsModal = document.getElementById('settingsModal');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const apiKeyInput = document.getElementById('userApiKey');
 
         window.addEventListener('DOMContentLoaded', () => {
             try {
                 const savedKey = localStorage.getItem('arst_api_key');
-                if (savedKey) apiKeyInput.value = savedKey;
-            } catch (e) {}
+                if (savedKey) {
+                    apiKeyInput.value = savedKey;
+                }
+            } catch (e) {
+                console.warn("Local storage diblokir.");
+            }
         });
 
-        document.getElementById('settingsBtn').onclick = () => settingsModal.classList.remove('hidden');
-        document.getElementById('closeSettingsBtn').onclick = () => settingsModal.classList.add('hidden');
-        document.getElementById('saveSettingsBtn').onclick = () => {
-            localStorage.setItem('arst_api_key', apiKeyInput.value.trim());
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('hidden');
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
-        };
+        });
 
-        window.copyToTTS = (id) => {
-            const txt = document.getElementById(id).innerText;
-            const current = document.getElementById('ttsInput').value;
-            document.getElementById('ttsInput').value = (current ? current + "\n\n" : "") + txt;
-            document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
-
-        async function fetchAI(prompt, model = "gemini-2.5-flash") {
-            const key = apiKey || apiKeyInput.value.trim();
-            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
+        saveSettingsBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            try {
+                if (key) {
+                    localStorage.setItem('arst_api_key', key);
+                } else {
+                    localStorage.removeItem('arst_api_key');
+                }
+            } catch (e) {
+                console.warn("Local storage diblokir.");
             }
-            return data;
+            settingsModal.classList.add('hidden');
+        });
+
+        async function fetchWithBackoff(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        let errorMessage = `Gagal terhubung ke server Google API (${response.status})`;
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.error?.message || errorMessage;
+                        } catch(e) {}
+                        throw new Error(errorMessage);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
         }
 
-        document.getElementById('productToggle').onchange = function() {
-            document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
-        };
+        function showError(message) {
+            const errorBox = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.innerText = message;
+            errorBox.classList.remove('hidden');
+            setTimeout(() => { errorBox.classList.add('hidden'); }, 7000);
+        }
 
-        // STEP 1: HOOKS 
-        document.getElementById('btnGenerateHook').onclick = async () => {
+        document.getElementById('productToggle').addEventListener('change', function() {
+            const container = document.getElementById('productInputContainer');
+            if(this.checked) container.classList.remove('hidden');
+            else container.classList.add('hidden');
+        });
+
+        document.getElementById('btnGenerateHook').addEventListener('click', async () => {
+            const userApiKey = document.getElementById('userApiKey').value.trim();
+            const activeApiKey = apiKey || userApiKey;
+
             const title = document.getElementById('title').value.trim();
-            if (!title) return;
-            const btn = document.getElementById('btnGenerateHook');
-            const loader = document.getElementById('loadingHook');
-            btn.disabled = true; loader.classList.remove('hidden');
-
-            const isSelling = document.getElementById('productToggle').checked;
-            const product = document.getElementById('productDesc').value.trim();
+            const productDesc = document.getElementById('productDesc').value.trim();
+            const duration = document.getElementById('duration').value;
             const checkboxes = document.querySelectorAll('input[name="type"]:checked');
             const types = Array.from(checkboxes).map(cb => cb.value).join(', ');
 
-            currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
+            if (!activeApiKey) {
+                settingsModal.classList.remove('hidden');
+                document.getElementById('userApiKey').focus();
+                return showError("Anda wajib mengatur API Key Gemini di Pengaturan terlebih dahulu!");
+            }
+            if (!title) return showError("Topik konten tidak boleh kosong!");
+            if (!types) return showError("Pilih minimal satu tipe narasi!");
 
-            // --- PROMPT BARU UNTUK HOOK ---
-            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video (maksimal 3-5 detik diucapkan) untuk topik: ${title}.
+            const isSellingMode = document.getElementById('productToggle').checked;
+            currentInputData = `- Judul/Topik Utama: ${title}\n- Tipe Narasi: ${types}\n- Durasi: ${duration} detik`;
+            if (isSellingMode && productDesc) {
+                currentInputData += `\n- Mode: Jualan/Affiliate\n- Info Produk: ${productDesc}`;
+            } else {
+                currentInputData += `\n- Mode: Murni Konten (Tanpa jualan)`;
+            }
+
+            const btn = document.getElementById('btnGenerateHook');
+            const spinner = document.getElementById('loadingHook');
+            const hookArea = document.getElementById('hookSelectionArea');
+            const resultArea = document.getElementById('resultArea');
             
-            ATURAN PENULISAN HOOK:
-            1. TANPA BASA-BASI: Jangan pakai intro panjang atau sapaan ("Halo guys"). Langsung jawab: "Kenapa penonton harus peduli dengan video ini?"
-            2. VERBAL HOOK KUAT: Gunakan pernyataan kontroversial, pertanyaan retoris tajam, atau janji hasil akhir.
-            3. FOKUS RETENSI: Buat kalimat yang menghentikan jempol audiens saat mereka sedang scrolling.
-            4. MENULIS UNTUK TELINGA: Gunakan kalimat pendek yang enak diucapkan (tidak membelit lidah). Gunakan kata ganti "kamu" atau "kita".
-            5. DILARANG menggunakan tanda kurung siku [ ].
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            hookArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
+            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
             
-            Format WAJIB: <H>teks</H> per opsi.`;
+            const btnScript = document.getElementById('btnGenerateScript');
+            btnScript.disabled = true;
+            btnScript.className = "w-full bg-slate-300 text-slate-500 cursor-not-allowed font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 relative z-10";
+
+            const promptHook = `Kamu adalah copywriter TikTok jenius. Buatkan 4 opsi HOOK (kalimat pertama 3-5 detik) yang SANGAT memicu rasa penasaran (curiosity gap) agar penonton tidak scroll, berdasarkan data ini:
+${currentInputData}
+Aturan:
+- Gunakan bahasa gaul, luwes, natural (gue/lu atau aku/kamu yang santai).
+- JANGAN bertele-tele. Langsung nendang!
+- Berikan format WAJIB seperti ini untuk tiap opsi (pisahkan dengan tag <H>):
+<H>teks opsi 1</H>
+<H>teks opsi 2</H>
+<H>teks opsi 3</H>
+<H>teks opsi 4</H>`;
 
             try {
-                const res = await fetchAI(prompt);
-                const text = res.candidates[0].content.parts[0].text;
-                const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
-                
-                const list = document.getElementById('hookList');
-                list.innerHTML = "";
-                hooks.forEach(h => {
-                    const d = document.createElement('div');
-                    d.className = "p-4 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50 font-medium text-sm transition-all";
-                    d.innerText = h;
-                    d.onclick = () => {
-                        document.querySelectorAll('#hookList div').forEach(x => x.classList.remove('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-100'));
-                        d.classList.add('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-100');
-                        selectedHookText = h;
-                        document.getElementById('btnGenerateScript').disabled = false;
-                        document.getElementById('btnGenerateScript').classList.replace('bg-slate-300', 'bg-blue-600');
-                        document.getElementById('btnGenerateScript').classList.replace('text-slate-500', 'text-white');
-                    };
-                    list.appendChild(d);
-                });
-                document.getElementById('hookSelectionArea').classList.remove('hidden');
-                setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { showError(e.message); }
-            finally { btn.disabled = false; loader.classList.add('hidden'); }
-        };
-
-        // STEP 2: SCRIPT
-        document.getElementById('btnGenerateScript').onclick = async () => {
-            const btn = document.getElementById('btnGenerateScript');
-            const loader = document.getElementById('loadingScript');
-            const duration = parseInt(document.getElementById('duration').value);
-            const wordCount = Math.floor(duration * 2.2);
-
-            btn.disabled = true; loader.classList.remove('hidden');
-
-            // --- PROMPT BARU UNTUK NARASI & CTA ---
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik (~${wordCount} kata).
-            DATA KONTEN: ${currentInputData}.
-            
-            ATURAN NARASI (PETA EMOSI & RETENSI):
-            1. TEKNIK OPEN LOOPS: Sampaikan informasi tapi simpan "kuncinya" untuk nanti agar penonton terus menonton karena penasaran.
-            2. PACING DINAMIS: Selang-seling antara informasi padat, hiburan ringan, dan momen refleksi agar penonton tidak kelelahan informasi (brain fog).
-            3. EMOSI > INFORMASI: Gunakan pendekatan Storytelling (Ada masalah/antagonis, ada solusi/pahlawan, ada transformasi). Buat agar penonton "merasakan" kontennya.
-            4. RELATABILITAS: Gunakan bahasa yang manusiawi, bukan bahasa robot/kamus. Gunakan kata "kamu" dan "kita".
-            5. MENULIS UNTUK TELINGA: Gunakan kalimat-kalimat pendek. Jika dibaca keras, tidak boleh ada kata yang membelit lidah atau bikin kehabisan napas.
-            6. DILARANG menggunakan tanda kurung siku [] untuk data. Langsung integrasikan data secara organik.
-            
-            ATURAN SMART CTA:
-            1. DILARANG menggunakan CTA pasaran seperti "Jangan lupa like dan subscribe" atau "Beli sekarang".
-            2. Buat CTA yang menggerakkan audiens secara natural (Contoh: "Kalau kamu merasa tips nomor 3 ini berguna, coba share ke temanmu yang sering ngalamin hal serupa").
-            3. Sisipkan keyword utama secara organik agar terdeteksi SEO TikTok/YouTube.
-            
-            Format WAJIB XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
-
-            try {
-                const res = await fetchAI(prompt);
-                const text = res.candidates[0].content.parts[0].text;
-                const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
-
-                document.getElementById('outHook').innerText = selectedHookText;
-                document.getElementById('outNarasi').innerText = extract('NARASI');
-                document.getElementById('outCTA').innerText = extract('CTA');
-                document.getElementById('resultArea').classList.remove('hidden');
-                setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { showError(e.message); }
-            finally { btn.disabled = false; loader.classList.add('hidden'); }
-        };
-
-        // STEP 3: VOICE GENERATION
-        document.getElementById('btnGenerateTTS').onclick = async () => {
-            const text = document.getElementById('ttsInput').value.trim();
-            const character = document.getElementById('voiceCharacter').value;
-            const tone = document.getElementById('voiceTone').value;
-            if (!text) return;
-            const btn = document.getElementById('btnGenerateTTS');
-            const loader = document.getElementById('loadingTTS');
-            btn.disabled = true; loader.classList.remove('hidden');
-
-            const prompt = `Say in a ${tone} tone: ${text}`;
-            const key = apiKey || apiKeyInput.value.trim();
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
-            
-            try {
-                const res = await fetch(url, {
+                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
+                const data = await fetchWithBackoff(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { 
-                            responseModalities: ["AUDIO"],
-                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: character } } }
-                        }
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptHook }] }] })
                 });
+
+                const textResp = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!textResp) throw new Error("Respons AI kosong. Pastikan API Key valid.");
+
+                const hooks = [...textResp.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
+                if (hooks.length === 0) throw new Error("Gagal memformat. Silakan coba tekan tombol generate lagi.");
+
+                const hookList = document.getElementById('hookList');
+                hookList.innerHTML = "";
                 
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
+                hooks.forEach((hookText, index) => {
+                    const card = document.createElement('div');
+                    card.className = "hook-card cursor-pointer p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 transition-all text-slate-700 font-medium";
+                    card.innerHTML = `<div class="flex gap-4 items-start">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-sm border border-blue-200 shadow-sm mt-0.5">${index + 1}</div>
+                        <p class="leading-relaxed text-slate-700 flex-1">${hookText}</p>
+                    </div>`;
+                    
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.hook-card').forEach(c => {
+                            c.classList.remove('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
+                            c.classList.add('border-slate-200', 'bg-white');
+                        });
+                        card.classList.remove('border-slate-200', 'bg-white');
+                        card.classList.add('border-blue-500', 'bg-blue-50', 'ring-4', 'ring-blue-100');
+                        
+                        selectedHookText = hookText;
+                        btnScript.disabled = false;
+                        btnScript.className = "w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 flex justify-center items-center gap-3 relative z-10 transform hover:-translate-y-1";
+                    });
+                    hookList.appendChild(card);
+                });
+
+                hookArea.classList.remove('hidden');
+                setTimeout(() => {
+                    hookArea.classList.remove('opacity-0', 'translate-y-4');
+                    hookArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 50);
+
+            } catch (error) {
+                console.error(error);
+                showError("Error: " + error.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // ==========================================
+        // TAHAP 2: GENERATE NARASI & CTA
+        // ==========================================
+        document.getElementById('btnGenerateScript').addEventListener('click', async () => {
+            if(!selectedHookText) return;
+
+            const userApiKey = document.getElementById('userApiKey').value.trim();
+            const activeApiKey = apiKey || userApiKey;
+
+            const duration = document.getElementById('duration').value;
+            const targetWordsMin = Math.floor(duration * 2.0);
+            const targetWordsMax = Math.floor(duration * 2.3);
+
+            const btn = document.getElementById('btnGenerateScript');
+            const spinner = document.getElementById('loadingScript');
+            const resultArea = document.getElementById('resultArea');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            resultArea.classList.add('hidden', 'opacity-0', 'translate-y-4');
+
+            const promptScript = `Lanjutkan pembuatan script video TikTok/Reels berdasarkan panduan berikut.
+DATA KONTEN:
+${currentInputData}
+HOOK YANG SUDAH DIPILIH:
+"${selectedHookText}"
+TUGAS:
+Lanjutkan Hook di atas menjadi sebuah ISI NARASI yang mengalir utuh, lalu diakhiri dengan CTA (Call to Action).
+ATURAN FLOW & GAYA BAHASA:
+1. Transisi Seamless: Langsung nyambung dari Hook. Jangan mengulang Hook.
+2. Super Flowy & Luwes: Bahasa obrolan santai.
+3. AKURASI DURASI: Tulis narasi antara ${targetWordsMin} sampai ${targetWordsMax} kata. Wajib ditaati.
+4. CTA Natural: Arahkan tindakan halus.
+Gunakan format WAJIB XML berikut:
+<NARASI>
+[Isi narasi flowy di sini]
+</NARASI>
+<CTA>
+[Teks CTA di sini]
+</CTA>`;
+
+            try {
+                // MENGGUNAKAN NAMA MODEL YANG BENAR DAN AKTIF: gemini-2.5-flash
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
+                const data = await fetchWithBackoff(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptScript }] }] })
+                });
+
+                const scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!scriptText) throw new Error("Gagal memuat script.");
+
+                const extractText = (tag) => {
+                    const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
+                    const match = scriptText.match(regex);
+                    return match ? match[1].trim() : ``;
+                };
+
+                document.getElementById('outHook').innerText = selectedHookText;
+                document.getElementById('outNarasi').innerText = extractText('NARASI');
+                document.getElementById('outCTA').innerText = extractText('CTA');
+
+                resultArea.classList.remove('hidden');
+                setTimeout(() => {
+                    resultArea.classList.remove('opacity-0', 'translate-y-4');
+                    resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+
+            } catch (error) {
+                showError("Gagal meracik narasi: " + error.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // ==========================================
+        // FITUR COPY CLIPBOARD
+        // ==========================================
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const hookText = document.getElementById('outHook').innerText;
+            const narasiText = document.getElementById('outNarasi').innerText;
+            const ctaText = document.getElementById('outCTA').innerText;
+            
+            const content = `**HOOK:**\n${hookText}\n\n**NARASI:**\n${narasiText}\n\n**CTA:**\n${ctaText}`;
+            if(!hookText) return;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                const copyBtn = document.getElementById('copyBtn');
+                const originalHTML = copyBtn.innerHTML;
                 
-                const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
-                const bin = atob(pcm64);
-                const pcm = new Int16Array(bin.length / 2);
-                for (let i = 0; i < pcm.length; i++) pcm[i] = bin.charCodeAt(i*2) | (bin.charCodeAt(i*2+1) << 8);
-
-                const wav = pcmToWav(pcm, 24000);
-                const audioUrl = URL.createObjectURL(wav);
-                document.getElementById('ttsAudioPlayer').src = audioUrl;
-                document.getElementById('downloadAudio').href = audioUrl;
-                document.getElementById('ttsAudioArea').classList.remove('hidden');
-                document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { showError(e.message); }
-            finally { btn.disabled = false; loader.classList.add('hidden'); }
-        };
-
-        function pcmToWav(pcm, rate) {
-            const b = new ArrayBuffer(44 + pcm.length * 2);
-            const v = new DataView(b);
-            const s = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
-            s(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); s(8, 'WAVE');
-            s(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-            v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true);
-            v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, pcm.length * 2, true);
-            for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, pcm[i], true);
-            return new Blob([v], { type: 'audio/wav' });
-        }
-
-        function showError(msg) {
-            document.getElementById('errorText').innerText = msg;
-            document.getElementById('errorMessage').classList.remove('hidden');
-            setTimeout(() => { document.getElementById('errorMessage').classList.add('hidden'); }, 7000);
-        }
-
-        document.getElementById('copyBtn').onclick = () => {
-            const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
-            const area = document.createElement('textarea'); area.value = t; document.body.appendChild(area); area.select(); document.execCommand('copy'); document.body.removeChild(area);
-            alert("Tersalin!");
-        };
+                copyBtn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Tersalin!';
+                copyBtn.classList.replace('bg-indigo-50', 'bg-green-100');
+                copyBtn.classList.replace('text-indigo-700', 'text-green-700');
+                copyBtn.classList.replace('border-indigo-100', 'border-green-200');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.replace('bg-green-100', 'bg-indigo-50');
+                    copyBtn.classList.replace('text-green-700', 'text-indigo-700');
+                    copyBtn.classList.replace('border-green-200', 'border-indigo-100');
+                }, 2500);
+            } catch (err) {
+                showError("Gagal menyalin teks.");
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        });
     </script>
 </body>
 </html>
+asli
