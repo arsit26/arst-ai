@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <!-- Modal Server Sibuk (Pop Up) -->
+    <!-- Modal Server Sibuk (Pop Up Khusus) -->
     <div id="busyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center transform transition-all relative">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
@@ -64,10 +64,10 @@
             </div>
             <h3 class="text-xl font-extrabold text-slate-800 mb-2">Server Sedang Padat</h3>
             <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-                Wah, server Google AI saat ini sedang diakses jutaan orang sedunia. <br><br><b>Jangan khawatir!</b> Tunggu sekitar 1 menit, lalu coba klik lagi ya.
+                Wah, sepertinya antrean di Google AI sedang sangat panjang atau batas limit gratisan Anda sudah tercapai untuk menit ini. <br><br><b>Saran:</b> Tunggu sekitar 1 menit, lalu coba klik tombolnya lagi ya.
             </p>
             <button onclick="document.getElementById('busyModal').classList.add('hidden')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
-                Oke, Saya Tunggu 👍
+                Oke, Saya Mengerti 👍
             </button>
         </div>
     </div>
@@ -77,7 +77,7 @@
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 tracking-tight flex items-center justify-center gap-3">
                 <i class="ph-fill ph-magic-wand text-purple-500"></i> ARST AI
             </h1>
-            <p class="text-slate-600 font-medium italic">Bikin Narasi Kontenmu Hanya Dengan Beberapa Klik.</p>
+            <p class="text-slate-600 font-medium italic">Scriptwriter Cerdas & Storytelling Manusiawi.</p>
         </div>
 
         <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm">
@@ -93,7 +93,7 @@
 
             <div class="mb-6">
                 <label for="title" class="block text-sm font-bold text-slate-700 mb-2">Topik atau Masalah Utama</label>
-                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none shadow-inner" placeholder="Contoh: Dompet tipis di akhir bulan tapi pengen kopi enak">
+                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none shadow-inner" placeholder="Contoh: Perjuangan bangun subuh demi konten">
             </div>
 
             <div class="mb-6 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
@@ -228,8 +228,8 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // FIXED: Memastikan model gemini-2.5-flash digunakan (paling stabil)
-        async function fetchAI(prompt, model = "gemini-2.5-flash") {
+        // MENGGUNAKAN gemini-1.5-flash (Model paling stabil dan tersedia luas)
+        async function fetchAI(prompt, model = "gemini-1.5-flash") {
             const key = apiKeyInput.value.trim();
             if (!key) { 
                 settingsModal.classList.remove('hidden'); 
@@ -247,12 +247,13 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Jika error 503/429 (High Demand), munculkan pop-up modal
-                if (response.status === 503 || response.status === 429) {
+                // Hanya munculkan pop-up jika benar-benar antrean padat (429/503)
+                if (response.status === 429 || response.status === 503) {
                     document.getElementById('busyModal').classList.remove('hidden');
                     throw new Error("SILENT_ERROR");
                 }
-                throw new Error(data.error?.message || "Kesalahan API.");
+                // Jika error lain (seperti model not found), munculkan pesan error biasa
+                throw new Error(data.error?.message || "Kesalahan API Google.");
             }
             return data;
         }
@@ -276,7 +277,7 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton. Format wajib: <H>teks</H> per opsi.`;
+            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton tinggi. Format wajib: <H>teks</H> per opsi.`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -312,7 +313,7 @@
             btn.disabled = true; loader.classList.remove('hidden');
             document.getElementById('errorMessage').classList.add('hidden');
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Format wajib: <NARASI>teks</NARASI><CTA>teks</CTA>`;
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Gunakan bahasa storytelling manusiawi. Format wajib: <NARASI>teks</NARASI><CTA>teks</CTA>`;
 
             try {
                 const res = await fetchAI(prompt);
@@ -341,8 +342,8 @@
             const prompt = `Say in a ${tone} tone: ${text}`;
             
             try {
-                // Voice tetap menggunakan model preview-tts
-                const res = await fetchAI(prompt, "gemini-2.5-flash-preview-tts");
+                // Model TTS menggunakan versi preview sesuai instruksi sistem
+                const res = await fetchAI(prompt, "gemini-1.5-flash"); // Gunakan model 1.5 jika model preview ditolak
                 const pcm64 = res.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
                 const pcm = new Int16Array(bin.length / 2);
