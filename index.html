@@ -49,26 +49,10 @@
                 <input type="password" id="userApiKey" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="AIzaSyBxxxx...">
                 <p class="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
                     Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 hover:text-blue-800 underline transition-colors">Dapatkan gratis di sini</a>.<br>
-                    <span class="text-green-600 font-bold"><i class="ph-fill ph-lock-key"></i> Aman. Disimpan hanya di browser Anda sendiri.</span>
+                    <span class="text-green-600 font-bold"><i class="ph-fill ph-lock-key"></i> Aman. Disimpan hanya di memori browser Anda sendiri.</span>
                 </p>
             </div>
             <button id="saveSettingsBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">Simpan & Tutup</button>
-        </div>
-    </div>
-
-    <!-- Modal Server Sibuk (Pop Up Khusus) -->
-    <div id="busyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center transform transition-all relative">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
-                <i class="ph-fill ph-warning-circle text-4xl text-orange-500"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Limit Terlampaui</h3>
-            <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-                Anda menggunakan API Gratis Google yang membatasi jumlah klik per menit. <br><br><b>Saran:</b> Tunggu sekitar 15-30 detik saja, lalu klik tombolnya lagi.
-            </p>
-            <button onclick="document.getElementById('busyModal').classList.add('hidden')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
-                Oke, Saya Tunggu 👍
-            </button>
         </div>
     </div>
 
@@ -77,7 +61,7 @@
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3 tracking-tight flex items-center justify-center gap-3">
                 <i class="ph-fill ph-magic-wand text-purple-500"></i> ARST AI
             </h1>
-            <p class="text-slate-600 font-medium italic">Scriptwriter Cerdas & Storytelling Manusiawi.</p>
+            <p class="text-slate-600 font-medium italic">Bikin Narasi Kontenmu Hanya Dengan Beberapa Klik.</p>
         </div>
 
         <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-md shadow-sm">
@@ -93,7 +77,7 @@
 
             <div class="mb-6">
                 <label for="title" class="block text-sm font-bold text-slate-700 mb-2">Topik atau Masalah Utama</label>
-                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none shadow-inner" placeholder="Contoh: Perjuangan bangun subuh demi konten">
+                <input type="text" id="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none shadow-inner" placeholder="Contoh: Dompet tipis di akhir bulan tapi pengen kopi enak">
             </div>
 
             <div class="mb-6 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
@@ -107,7 +91,7 @@
                     </label>
                 </div>
                 <div id="productInputContainer" class="hidden mt-4">
-                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 text-sm focus:border-orange-500 outline-none" placeholder="Masukkan Nama Brand & Detail Produk di sini..."></textarea>
+                    <textarea id="productDesc" rows="3" class="w-full px-4 py-3 rounded-xl border border-orange-200 text-sm focus:border-orange-500 outline-none" placeholder="Masukkan Nama Brand & Detail Produk di sini. AI akan menggunakannya secara langsung tanpa tanda kurung..."></textarea>
                 </div>
             </div>
 
@@ -203,6 +187,7 @@
     </div>
 
     <script>
+        const apiKey = ""; 
         let currentInputData = ""; 
         let selectedHookText = ""; 
 
@@ -210,8 +195,10 @@
         const apiKeyInput = document.getElementById('userApiKey');
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('arst_api_key');
-            if (savedKey) apiKeyInput.value = savedKey;
+            try {
+                const savedKey = localStorage.getItem('arst_api_key');
+                if (savedKey) apiKeyInput.value = savedKey;
+            } catch (e) {}
         });
 
         document.getElementById('settingsBtn').onclick = () => settingsModal.classList.remove('hidden');
@@ -228,15 +215,10 @@
             document.getElementById('ttsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        // KODE BERSIH: HANYA MENGGUNAKAN 1 MODEL TANPA LOOP SPAM
-        async function fetchAI(prompt, modelName = "gemini-1.5-flash") {
-            const key = apiKeyInput.value.trim();
-            if (!key) { 
-                settingsModal.classList.remove('hidden'); 
-                throw new Error("API Key belum diset di pengaturan!"); 
-            }
-            
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+        async function fetchAI(prompt, model = "gemini-2.5-flash") {
+            const key = apiKey || apiKeyInput.value.trim();
+            if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -247,14 +229,7 @@
             const data = await response.json();
             
             if (!response.ok) {
-                // Hanya munculkan pop-up jika benar-benar antrean padat (429 limit atau 503)
-                if (response.status === 429 || response.status === 503 || (data.error?.message && data.error.message.includes("Quota"))) {
-                    document.getElementById('busyModal').classList.remove('hidden');
-                    throw new Error("SILENT_ERROR");
-                }
-                
-                // Jika error lain, tampilkan pesan aslinya agar kita tahu
-                throw new Error(data.error?.message || `Error Kode: ${response.status}`);
+                throw new Error(data.error?.message || "Terjadi kesalahan yang tidak diketahui pada server AI.");
             }
             return data;
         }
@@ -263,13 +238,13 @@
             document.getElementById('productInputContainer').classList.toggle('hidden', !this.checked);
         };
 
+        // STEP 1: HOOKS 
         document.getElementById('btnGenerateHook').onclick = async () => {
             const title = document.getElementById('title').value.trim();
             if (!title) return;
             const btn = document.getElementById('btnGenerateHook');
             const loader = document.getElementById('loadingHook');
             btn.disabled = true; loader.classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
 
             const isSelling = document.getElementById('productToggle').checked;
             const product = document.getElementById('productDesc').value.trim();
@@ -278,16 +253,23 @@
 
             currentInputData = `Topik: ${title}. Tipe: ${types}. ${isSelling ? 'Detail Produk: ' + product : 'Non-Jualan.'}`;
 
-            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video singkat (maksimal 5 detik) untuk topik: ${title}. Fokus pada retensi penonton tinggi. Format wajib: <H>teks</H> per opsi. Jangan gunakan simbol rumit.`;
+            // --- PROMPT BARU UNTUK HOOK ---
+            const prompt = `Sebagai scriptwriter profesional, buat 4 opsi HOOK video (maksimal 3-5 detik diucapkan) untuk topik: ${title}.
+            
+            ATURAN PENULISAN HOOK:
+            1. TANPA BASA-BASI: Jangan pakai intro panjang atau sapaan ("Halo guys"). Langsung jawab: "Kenapa penonton harus peduli dengan video ini?"
+            2. VERBAL HOOK KUAT: Gunakan pernyataan kontroversial, pertanyaan retoris tajam, atau janji hasil akhir.
+            3. FOKUS RETENSI: Buat kalimat yang menghentikan jempol audiens saat mereka sedang scrolling.
+            4. MENULIS UNTUK TELINGA: Gunakan kalimat pendek yang enak diucapkan (tidak membelit lidah). Gunakan kata ganti "kamu" atau "kita".
+            5. DILARANG menggunakan tanda kurung siku [ ].
+            
+            Format WAJIB: <H>teks</H> per opsi.`;
 
             try {
-                // Tembak langsung ke model stabil
-                const res = await fetchAI(prompt, "gemini-1.5-flash");
+                const res = await fetchAI(prompt);
                 const text = res.candidates[0].content.parts[0].text;
                 const hooks = [...text.matchAll(/<H>([\s\S]*?)<\/H>/gi)].map(m => m[1].trim());
                 
-                if (hooks.length === 0) throw new Error("Format AI tidak sesuai, silakan coba klik lagi.");
-
                 const list = document.getElementById('hookList');
                 list.innerHTML = "";
                 hooks.forEach(h => {
@@ -306,22 +288,40 @@
                 });
                 document.getElementById('hookSelectionArea').classList.remove('hidden');
                 setTimeout(() => document.getElementById('hookSelectionArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { if(e.message !== "SILENT_ERROR") showError(e.message); }
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
+        // STEP 2: SCRIPT
         document.getElementById('btnGenerateScript').onclick = async () => {
             const btn = document.getElementById('btnGenerateScript');
             const loader = document.getElementById('loadingScript');
             const duration = parseInt(document.getElementById('duration').value);
-            btn.disabled = true; loader.classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
+            const wordCount = Math.floor(duration * 2.2);
 
-            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video berdurasi ${duration} detik. DATA: ${currentInputData}. Gunakan bahasa storytelling manusiawi, bukan bahasa robot. Format wajib: <NARASI>teks narasi lengkap</NARASI><CTA>teks kesimpulan/cta</CTA>`;
+            btn.disabled = true; loader.classList.remove('hidden');
+
+            // --- PROMPT BARU UNTUK NARASI & CTA ---
+            const prompt = `Lanjutkan hook "${selectedHookText}" menjadi narasi video utuh berdurasi ${duration} detik (~${wordCount} kata).
+            DATA KONTEN: ${currentInputData}.
+            
+            ATURAN NARASI (PETA EMOSI & RETENSI):
+            1. TEKNIK OPEN LOOPS: Sampaikan informasi tapi simpan "kuncinya" untuk nanti agar penonton terus menonton karena penasaran.
+            2. PACING DINAMIS: Selang-seling antara informasi padat, hiburan ringan, dan momen refleksi agar penonton tidak kelelahan informasi (brain fog).
+            3. EMOSI > INFORMASI: Gunakan pendekatan Storytelling (Ada masalah/antagonis, ada solusi/pahlawan, ada transformasi). Buat agar penonton "merasakan" kontennya.
+            4. RELATABILITAS: Gunakan bahasa yang manusiawi, bukan bahasa robot/kamus. Gunakan kata "kamu" dan "kita".
+            5. MENULIS UNTUK TELINGA: Gunakan kalimat-kalimat pendek. Jika dibaca keras, tidak boleh ada kata yang membelit lidah atau bikin kehabisan napas.
+            6. DILARANG menggunakan tanda kurung siku [] untuk data. Langsung integrasikan data secara organik.
+            
+            ATURAN SMART CTA:
+            1. DILARANG menggunakan CTA pasaran seperti "Jangan lupa like dan subscribe" atau "Beli sekarang".
+            2. Buat CTA yang menggerakkan audiens secara natural (Contoh: "Kalau kamu merasa tips nomor 3 ini berguna, coba share ke temanmu yang sering ngalamin hal serupa").
+            3. Sisipkan keyword utama secara organik agar terdeteksi SEO TikTok/YouTube.
+            
+            Format WAJIB XML: <NARASI>teks narasi</NARASI><CTA>teks cta</CTA>`;
 
             try {
-                // Tembak langsung ke model stabil
-                const res = await fetchAI(prompt, "gemini-1.5-flash");
+                const res = await fetchAI(prompt);
                 const text = res.candidates[0].content.parts[0].text;
                 const extract = (tag) => (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || ["",""])[1].trim();
 
@@ -330,10 +330,11 @@
                 document.getElementById('outCTA').innerText = extract('CTA');
                 document.getElementById('resultArea').classList.remove('hidden');
                 setTimeout(() => document.getElementById('resultArea').classList.remove('opacity-0', 'translate-y-4'), 50);
-            } catch(e) { if(e.message !== "SILENT_ERROR") showError(e.message); }
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
+        // STEP 3: VOICE GENERATION
         document.getElementById('btnGenerateTTS').onclick = async () => {
             const text = document.getElementById('ttsInput').value.trim();
             const character = document.getElementById('voiceCharacter').value;
@@ -342,16 +343,13 @@
             const btn = document.getElementById('btnGenerateTTS');
             const loader = document.getElementById('loadingTTS');
             btn.disabled = true; loader.classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
 
             const prompt = `Say in a ${tone} tone: ${text}`;
+            const key = apiKey || apiKeyInput.value.trim();
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
             
             try {
-                // Untuk suara menggunakan model TTS beta (didukung semua key)
-                const key = apiKeyInput.value.trim();
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
-                
-                const response = await fetch(url, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -363,16 +361,9 @@
                     })
                 });
                 
-                const data = await response.json();
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error?.message || "Terjadi kesalahan saat memproses suara.");
                 
-                if (!response.ok) {
-                    if (response.status === 429 || response.status === 503) {
-                        document.getElementById('busyModal').classList.remove('hidden');
-                        throw new Error("SILENT_ERROR");
-                    }
-                    throw new Error(`Kesalahan TTS: ${data.error?.message}`);
-                }
-
                 const pcm64 = data.candidates[0].content.parts[0].inlineData.data;
                 const bin = atob(pcm64);
                 const pcm = new Int16Array(bin.length / 2);
@@ -384,7 +375,7 @@
                 document.getElementById('downloadAudio').href = audioUrl;
                 document.getElementById('ttsAudioArea').classList.remove('hidden');
                 document.getElementById('ttsAudioPlayer').play();
-            } catch(e) { if(e.message !== "SILENT_ERROR") showError(e.message); }
+            } catch(e) { showError(e.message); }
             finally { btn.disabled = false; loader.classList.add('hidden'); }
         };
 
@@ -403,12 +394,13 @@
         function showError(msg) {
             document.getElementById('errorText').innerText = msg;
             document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('errorMessage').classList.add('hidden'); }, 7000);
         }
 
         document.getElementById('copyBtn').onclick = () => {
             const t = `HOOK:\n${document.getElementById('outHook').innerText}\n\nNARASI:\n${document.getElementById('outNarasi').innerText}\n\nCTA:\n${document.getElementById('outCTA').innerText}`;
-            navigator.clipboard.writeText(t);
-            alert("Berhasil disalin!");
+            const area = document.createElement('textarea'); area.value = t; document.body.appendChild(area); area.select(); document.execCommand('copy'); document.body.removeChild(area);
+            alert("Tersalin!");
         };
     </script>
 </body>
