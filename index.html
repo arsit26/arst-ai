@@ -237,8 +237,8 @@
             const key = apiKey || apiKeyInput.value.trim();
             if (!key) { settingsModal.classList.remove('hidden'); throw new Error("API Key belum diset! Silakan masukkan di pengaturan."); }
             
-            // Memastikan menggunakan model yang 100% didukung
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
+            // PERBAIKAN: Menggunakan gemini-1.5-flash untuk pembuatan Teks (Sesuai instruksimu)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
             const options = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -329,7 +329,7 @@
             btn.disabled = true; loader.classList.remove('hidden');
 
             const key = apiKey || apiKeyInput.value.trim();
-            // PERBAIKAN: Menggunakan URL Model Khusus TTS
+            // JANGAN DIUBAH KE 1.5: Suara wajib menggunakan model preview-tts ini, jika diubah ke 1.5-flash akan error kembali
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`;
             
             const options = {
